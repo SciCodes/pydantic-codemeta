@@ -1,0 +1,62 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "@id": "https://doi.org/10.1234/example",
+  "name": "Research Toolkit",
+  "description": "A complete CodeMeta example.",
+  "url": "https://example.org/toolkit",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "DOI",
+    "propertyID": "doi",
+    "value": "10.1234/example"
+  },
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Example Lab"
+      }
+    },
+    {
+      "@type": "Organization",
+      "name": "COMSES Net",
+      "email": "info@example.org",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "support",
+        "email": "support@example.org",
+        "url": "https://example.org/support"
+      }
+    }
+  ],
+  "contributor": {
+    "@type": "Person",
+    "name": "Alex Doe"
+  },
+  "maintainer": "maintainers@example.org",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Example Lab"
+  },
+  "keywords": [
+    "simulation",
+    "codemeta"
+  ],
+  "license": [
+    "https://spdx.org/licenses/MIT.html"
+  ],
+  "codeRepository": "https://github.com/example/research-toolkit",
+  "programmingLanguage": [
+    "Python",
+    "R"
+  ],
+  "version": "2.4.1",
+  "dateCreated": "2024-01-10",
+  "dateModified": "2024-05-20",
+  "datePublished": "2024-06-01",
+  "softwareRequirements": "Python >= 3.10"
+}
