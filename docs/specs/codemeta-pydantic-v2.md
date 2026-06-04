@@ -1,4 +1,4 @@
-# CodeMeta Schema.org Model Layer Specification
+# CodeMeta Data Model Specification
 
 ## Status
 
@@ -6,43 +6,63 @@ Draft
 
 ## Motivation
 
-`codemeticulous` currently depends on a schema.org model layer that is implemented using `pydantic.v1.BaseModel`. This creates an inconsistency within the codebase because the remainder of the project uses Pydantic v2.
+The goal of this specification is to define a typed, maintainable model layer for in-memory CodeMeta metadata handling.
 
-The goal of this specification is to define a clean-room, Pydantic v2-native implementation of the schema.org types required to support CodeMeta metadata validation, serialization, and conversion workflows.
+The implementation should support parsing, validation, manipulation, and serialization of CodeMeta metadata while remaining aligned with the CodeMeta vocabulary and JSON-LD representation.
 
-This implementation is intentionally scoped to the CodeMeta vocabulary and is not intended to provide complete coverage of the schema.org ecosystem.
+The current implementation target is Pydantic v2. The model layer should be structured so that future Pydantic upgrades can be accommodated with minimal disruption.
 
-## Goals
+This implementation is intentionally scoped to CodeMeta metadata handling and is not intended to provide complete schema.org coverage.
 
-### Primary Goals
+## Scope
 
-* Eliminate all runtime dependence on `pydantic.v1`.
-* Provide a fully Pydantic v2-native schema.org model layer.
-* Support parsing and serialization of CodeMeta JSON-LD documents.
-* Support the complete set of terms defined by the current CodeMeta vocabulary.
-* Preserve unknown properties for forward compatibility with future CodeMeta and schema.org extensions.
-* Provide a foundation that can be incrementally extended as additional schema.org types become necessary.
+### In Scope
 
-### Non-Goals
+* Typed models for the CodeMeta vocabulary used by `codemeticulous`
+* JSON-LD parsing and serialization
+* Preservation of unknown properties
+* Round-trip-friendly model behavior
+* Support for CodeMeta-specific terms and schema.org terms used by CodeMeta
+* Practical in-memory editing of metadata records
+* Validation of CodeMeta records using contemporary Pydantic APIs
 
-* Complete schema.org coverage.
-* Automatic generation of all schema.org types.
-* Backward compatibility with the internal implementation details of external schema.org libraries.
-* Exact replication of inheritance hierarchies from existing implementations.
+### Out of Scope
+
+* Complete schema.org coverage
+* Automatic generation of all schema.org types
+* Standalone package extraction
+* Recreation of external schema.org model implementations
+* Exact replication of inheritance hierarchies from existing libraries
+
+## Packaging and Source Tree
+
+The implementation shall live under:
+
+```text
+src/codemeta_pydantic/
+```
+
+This package is an internal implementation detail of `codemeticulous` intended to provide convenient typed data models for in-memory CodeMeta work.
+
+Although the current implementation target is Pydantic v2, the architecture should remain focused on the CodeMeta information model rather than framework-specific implementation details.
+
+The source tree should be organized so the model layer remains easy to maintain and can be extracted later if needed, but standalone extraction is explicitly out of scope for this work.
 
 ## Future Compatibility
 
-This work is being structured with the expectation that CodeMeta v4 will become the next target vocabulary version soon.
+This work is being structured with the expectation that CodeMeta will continue to evolve, including future CodeMeta v4 changes.
 
-The implementation should therefore favor clean extensibility over assumptions tied exclusively to the current CodeMeta release.
+The implementation should favor clean extensibility and practical metadata handling over assumptions tied exclusively to the current CodeMeta release.
 
 ## Design Principles
 
-### Pydantic v2 Native
+### Modern Pydantic
 
-All models shall use Pydantic v2 APIs exclusively.
+The implementation shall target the current supported Pydantic release series.
 
-No imports from `pydantic.v1` are permitted.
+At the time of writing, the target is Pydantic v2.
+
+The implementation should use contemporary Pydantic APIs and idioms and avoid unnecessary coupling to framework internals that would make future upgrades difficult.
 
 ### JSON-LD First
 
@@ -58,7 +78,7 @@ Serialization shall produce schema.org-compatible field names using aliases.
 
 Relations shall be represented using explicit unions of supported node types rather than untyped containers.
 
-Examples:
+Example:
 
 ```python
 AuthorType = Person | Organization | Role | str
@@ -69,15 +89,21 @@ AuthorField = AuthorType | list[AuthorType]
 
 Models shall permit unknown properties and preserve them during round-trip serialization.
 
-This is necessary because CodeMeta documents frequently contain community-specific extensions and schema.org evolves independently of CodeMeta releases.
+Unknown properties shall be stored and round-tripped as raw JSON-compatible values without additional type inference, coercion, or interpretation.
+
+Implementations should not attempt to dynamically construct typed objects from unknown properties.
+
+This behavior is required to preserve forward compatibility with future CodeMeta releases, community extensions, and schema.org evolution.
 
 ### Extensibility
 
-The model hierarchy should make it straightforward to add additional schema.org types in future releases without requiring substantial refactoring.
+The model hierarchy should make it straightforward to add additional CodeMeta vocabulary terms and supporting types in future releases without requiring substantial refactoring.
 
 ## Supported Types
 
-The implementation shall provide the following schema.org types:
+The implementation shall provide the following types:
+
+### Core Types
 
 * Thing
 * Person
@@ -95,16 +121,31 @@ The implementation shall provide the following schema.org types:
 * SoftwareSourceCode
 * SoftwareApplication
 
-Additionally, the implementation shall provide:
+### Infrastructure Types
 
-* SchemaOrgBase (abstract base model)
-* CodeMeta (convenience wrapper around `SoftwareSourceCode`)
+* SchemaOrgBase
+* CodeMeta
 
-## CodeMeta Wrapper
+### Supporting Type Rationale
 
-`CodeMeta` is not a distinct schema.org type.
+The following supporting types are included because they are referenced by the CodeMeta vocabulary and related schema.org terms:
 
-Instead, it represents a specialized `SoftwareSourceCode` model with default JSON-LD metadata corresponding to the current CodeMeta context.
+| Type               | Purpose                                                                        |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `PostalAddress`    | Supports structured `Person.address` values.                                   |
+| `MediaObject`      | Supports `encoding` and related media representations.                         |
+| `DataFeed`         | Supports `supportingData`.                                                     |
+| `ScholarlyArticle` | Supports `referencePublication`.                                               |
+| `ComputerLanguage` | Supports structured `programmingLanguage` values.                              |
+| `Role`             | Supports contributor role modeling via `roleName`, `startDate`, and `endDate`. |
+
+These types are included to support CodeMeta use cases and are not intended to provide complete schema.org coverage.
+
+## CodeMeta Model
+
+`CodeMeta` is a convenience model for in-memory manipulation of CodeMeta metadata.
+
+It is not intended to be a general-purpose schema.org implementation.
 
 Default serialization shall include:
 
@@ -115,25 +156,25 @@ Default serialization shall include:
 }
 ```
 
-## CodeMeta Vocabulary
+## Vocabulary Source of Truth
 
-The implementation shall target the CodeMeta vocabulary as defined by the canonical CodeMeta source.
-
-Canonical source:
+The implementation shall target the CodeMeta vocabulary as defined by the canonical CodeMeta source:
 
 https://w3id.org/codemeta/3.0
 
-The term lists and examples contained in this specification are informational only.
+Examples, mappings, and term lists in this specification are informational only.
 
-If there is any conflict between this document and the canonical CodeMeta source, the canonical source shall take precedence.
+If there is any conflict between this document and the canonical CodeMeta source, the canonical source takes precedence.
+
+The implementation should be designed so that future CodeMeta vocabulary releases, including CodeMeta v4, can be adopted without major architectural changes.
 
 ## Vocabulary Coverage
 
-The implementation shall support the complete vocabulary defined by the canonical CodeMeta source.
+The implementation shall support the CodeMeta vocabulary required for in-memory metadata handling within `codemeticulous`.
 
-The following categories are expected to be represented:
+Coverage includes, but is not limited to, the following categories.
 
-### Schema.org Software Terms
+### Software Metadata Terms
 
 Examples include:
 
@@ -170,7 +211,7 @@ Examples include:
 * relatedLink
 * sameAs
 
-### Schema.org Person, Thing, Role, and Review Terms
+### Person, Organization, Role, and Review Terms
 
 Examples include:
 
@@ -188,6 +229,7 @@ Examples include:
 Examples include:
 
 * buildInstructions
+* contIntegration
 * continuousIntegration
 * developmentStatus
 * embargoDate
@@ -212,7 +254,7 @@ The implementation shall support:
 * `startDate`
 * `endDate`
 
-Where role-aware relationships are supported, the accepted union type shall be:
+Role-aware relationships shall support:
 
 ```python
 Person | Organization | Role | str
@@ -224,9 +266,9 @@ This applies to fields such as:
 * contributor
 * maintainer
 
-and any similar contributor-style relationships defined by CodeMeta.
+and similar contributor-style relationships.
 
-## Tricky Field Type Mappings
+## Normative Field Type Mappings
 
 The following mappings are normative.
 
@@ -261,6 +303,16 @@ Round-trip serialization shall preserve:
 * lists
 * unknown properties
 
+### `@type` Serialization Requirement
+
+All concrete model types shall define a non-null `@type` value.
+
+`@type` shall always be serialized on concrete types and shall never be omitted from serialized output.
+
+Implementations shall not model `@type` as an optional field on concrete classes.
+
+This requirement exists to ensure valid JSON-LD output and reliable type discrimination during parsing and serialization.
+
 ## Date Parsing and Serialization
 
 Date fields shall accept both ISO date strings and native `datetime.date` objects.
@@ -270,20 +322,20 @@ Parsing preference:
 * If the input is a parseable ISO 8601 date string, coerce it to `datetime.date`.
 * If the input is not parseable as a date, preserve it as `str`.
 
-This allows consumers to reliably compare valid dates while remaining tolerant of real-world metadata that uses nonstandard date formats.
+This allows consumers to compare valid dates while remaining tolerant of real-world metadata that uses nonstandard date formats.
 
 ## Validation Requirements
 
 The model layer shall:
 
 * Validate known field types.
-* Accept nested schema.org objects where appropriate.
+* Accept nested objects where appropriate.
 * Accept JSON-LD aliases directly.
 * Accept both Python field names and alias names during construction.
 * Preserve unknown properties.
 * Support date values represented either as strings or native date objects.
 
-Validation should remain pragmatic rather than unnecessarily restrictive in order to support real-world metadata records.
+Validation should remain pragmatic rather than unnecessarily restrictive.
 
 ## Testing Requirements
 
@@ -317,11 +369,11 @@ Round-trip serialization of these fixtures shall preserve semantic content.
 
 This work is complete when:
 
-1. No runtime dependency on `pydantic.v1` remains.
-2. CodeMeta documents can be parsed into strongly typed Pydantic v2 models.
+1. CodeMeta documents can be represented as typed models for in-memory use.
+2. The implementation targets the current supported Pydantic release series (currently Pydantic v2).
 3. CodeMeta documents can be serialized back to valid JSON-LD.
 4. Unknown properties survive round-trip serialization.
-5. The complete CodeMeta vocabulary is represented by the model layer.
-6. Existing CodeMeta functionality continues to operate using the new models.
+5. The required CodeMeta vocabulary is represented by the model layer.
+6. All pre-existing tests in the `tests/` suite pass without modification.
 7. The implementation is covered by automated tests.
 8. The design remains extensible for future CodeMeta vocabulary revisions, including CodeMeta v4.
