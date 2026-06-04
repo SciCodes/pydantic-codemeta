@@ -1,12 +1,11 @@
 """Minimal schema.org models used for CodeMeta metadata."""
 
-from .base import SchemaOrgBase, Thing
+from .base import PropertyValue, SchemaOrgBase, Thing
 from .codemeta import CodeMeta
 from .types import (
     ContactPoint,
     Organization,
     Person,
-    PropertyValue,
     SoftwareApplication,
     SoftwareSourceCode,
 )

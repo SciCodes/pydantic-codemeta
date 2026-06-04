@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -49,4 +48,9 @@ class Thing(SchemaOrgBase):
     identifier: str | PropertyValue | list[str | PropertyValue] | None = None
 
 
-from .types import PropertyValue  # noqa: E402
+class PropertyValue(Thing):
+    """A schema.org structured property value."""
+
+    type: Literal["PropertyValue"] = Field("PropertyValue", alias="@type")
+    value: str | int | float | None = None
+    propertyID: str | None = None

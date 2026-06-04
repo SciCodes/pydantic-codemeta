@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 
-from .base import Thing
+from .base import PropertyValue, Thing
 
 
 class ContactPoint(Thing):
@@ -16,14 +16,6 @@ class ContactPoint(Thing):
     type: Literal["ContactPoint"] = Field("ContactPoint", alias="@type")
     contactType: str | None = None
     email: str | None = None
-
-
-class PropertyValue(Thing):
-    """A schema.org structured property value."""
-
-    type: Literal["PropertyValue"] = Field("PropertyValue", alias="@type")
-    value: str | int | float | None = None
-    propertyID: str | None = None
 
 
 class Organization(Thing):
