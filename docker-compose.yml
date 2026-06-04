@@ -1,0 +1,20 @@
+services:
+  test:
+    build:
+      context: .
+    image: codemeta-pydantic:local
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/.venv
+    command: pytest -q
+
+  package:
+    build:
+      context: .
+    image: codemeta-pydantic:local
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/.venv
+    command: sh -lc "rm -rf dist build && uv build"

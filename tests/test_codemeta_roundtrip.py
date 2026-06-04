@@ -4,7 +4,7 @@ import json
 from datetime import date
 from pathlib import Path
 
-from codemeticulous.schemaorg import CodeMeta, Organization, Person, PropertyValue
+from codemeta_datamodel import CodeMeta, Organization, Person, PropertyValue
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
