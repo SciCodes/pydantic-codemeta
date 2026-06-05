@@ -18,7 +18,7 @@ sync:
 	$(UV) sync --extra test --group dev
 
 test:
-	$(UV) run pytest -q
+	$(DC) run --rm test
 
 clean:
 	rm -rf $(DIST_DIR) build
