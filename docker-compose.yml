@@ -2,6 +2,10 @@ services:
   test:
     build:
       context: .
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+        APPUSER: ${APPUSER:-scicodes}
     image: codemeta-pydantic:local
     working_dir: /app
     volumes:
@@ -12,6 +16,10 @@ services:
   package:
     build:
       context: .
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+        APPUSER: ${APPUSER:-scicodes}
     image: codemeta-pydantic:local
     working_dir: /app
     volumes:
