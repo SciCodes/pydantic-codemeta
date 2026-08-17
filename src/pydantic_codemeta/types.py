@@ -92,7 +92,14 @@ class ComputerLanguage(Thing):
     type: Literal["ComputerLanguage"] = Field("ComputerLanguage", alias="@type")
 
 
-# Type alias for agent-style fields (author, contributor, maintainer).
+class VersionedLanguage(ComputerLanguage):
+    """A ComputerLanguage extended with a version field."""
+
+    type: Literal["VersionedLanguage"] = Field("VersionedLanguage", alias="@type")
+    version: str | None = None
+
+
+# Type aliases for agent-style fields (author, contributor, maintainer, etc.).
 Agent: TypeAlias = Person | Organization | Role | str
 AgentField: TypeAlias = Agent | list[Agent]
 
@@ -109,15 +116,23 @@ class CreativeWork(Thing):
     author: AgentField | None = None
     contributor: AgentField | None = None
     maintainer: AgentField | None = None
-    publisher: Organization | Person | str | None = None
-    funder: Organization | Person | str | None = None
-    sponsor: Organization | Person | str | None = None
-    provider: Organization | Person | str | None = None
-    producer: Organization | Person | str | None = None
-    license: CreativeWork | str | None = None
-    citation: CreativeWork | ScholarlyArticle | str | None = None
+    creator: AgentField | None = None
+    editor: Person | list[Person] | None = None
+    publisher: Organization | Person | str | list[str] | None = None
+    copyrightHolder: AgentField | None = None
+    copyrightYear: int | list[int] | None = None
+    funder: AgentField | None = None
+    sponsor: AgentField | None = None
+    provider: AgentField | None = None
+    producer: AgentField | None = None
+    license: CreativeWork | str | list[CreativeWork | str] | None = None
+    citation: CreativeWork | ScholarlyArticle | str | list[CreativeWork | ScholarlyArticle | str] | None = None
     review: Review | str | None = None
+    isPartOf: CreativeWork | str | list[CreativeWork | str] | None = None
+    hasPart: CreativeWork | str | list[CreativeWork | str] | None = None
+    encoding: MediaObject | list[MediaObject] | None = None
     keywords: str | list[str] | None = None
+    position: int | str | list[int | str] | None = None
     dateCreated: date | str | None = None
     dateModified: date | str | None = None
     datePublished: date | str | None = None
@@ -172,33 +187,41 @@ class SoftwareSourceCode(CreativeWork):
     context: str | None = Field(None, alias="@context")
     type: Literal["SoftwareSourceCode"] = Field("SoftwareSourceCode", alias="@type")
     codeRepository: str | None = None
-    programmingLanguage: ComputerLanguage | str | list[ComputerLanguage | str] | None = None
-    softwareRequirements: str | None = None
-    runtimePlatform: str | None = None
-    operatingSystem: str | None = None
-    memoryRequirements: str | None = None
-    processorRequirements: str | None = None
-    storageRequirements: str | None = None
-    softwareHelp: str | None = None
-    targetProduct: str | None = None
-    downloadUrl: str | None = None
-    installUrl: str | None = None
-    relatedLink: str | None = None
-    version: str | None = None
+    programmingLanguage: VersionedLanguage | ComputerLanguage | str | list[VersionedLanguage | ComputerLanguage | str] | None = None
+    runtimePlatform: str | list[str] | None = None
+    targetProduct: SoftwareApplication | str | list[SoftwareApplication | str] | None = None
+    applicationCategory: str | list[str] | None = None
+    applicationSubCategory: str | list[str] | None = None
+    downloadUrl: str | list[str] | None = None
+    fileSize: str | None = None
+    installUrl: str | list[str] | None = None
+    memoryRequirements: str | list[str] | None = None
+    operatingSystem: str | list[str] | None = None
+    permissions: str | list[str] | None = None
+    processorRequirements: str | list[str] | None = None
+    releaseNotes: str | list[str] | None = None
+    softwareHelp: CreativeWork | str | list[CreativeWork | str] | None = None
+    softwareRequirements: str | list[str] | None = None
+    softwareVersion: str | None = None
+    storageRequirements: str | list[str] | None = None
+    fileFormat: str | list[str] | None = None
+    isAccessibleForFree: bool | None = None
+    relatedLink: str | list[str] | None = None
+    version: int | float | str | list[int | float | str] | None = None
     # CodeMeta-specific terms
-    buildInstructions: str | None = None
-    contIntegration: str | None = None
-    continuousIntegration: str | None = None
+    buildInstructions: str | list[str] | None = None
+    contIntegration: str | list[str] | None = None
+    continuousIntegration: str | list[str] | None = None
     developmentStatus: str | None = None
     embargoDate: date | str | None = None
     embargoEndDate: date | str | None = None
-    funding: str | None = None
-    hasSourceCode: str | None = None
-    isSourceCodeOf: str | None = None
-    issueTracker: str | None = None
-    readme: str | None = None
+    funding: str | list[str] | None = None
+    hasSourceCode: str | list[str] | None = None
+    isSourceCodeOf: str | list[str] | None = None
+    issueTracker: str | list[str] | None = None
+    readme: str | list[str] | None = None
     referencePublication: ScholarlyArticle | str | list[ScholarlyArticle | str] | None = None
-    softwareSuggestions: str | None = None
+    softwareSuggestions: str | list[str] | None = None
 
     @field_validator("embargoDate", "embargoEndDate", mode="before")
     @classmethod
@@ -212,11 +235,16 @@ class SoftwareApplication(CreativeWork):
     """A schema.org SoftwareApplication model."""
 
     type: Literal["SoftwareApplication"] = Field("SoftwareApplication", alias="@type")
-    applicationCategory: str | None = None
-    operatingSystem: str | None = None
+    applicationCategory: str | list[str] | None = None
+    applicationSubCategory: str | list[str] | None = None
+    operatingSystem: str | list[str] | None = None
     softwareVersion: str | None = None
-    downloadUrl: str | None = None
-    installUrl: str | None = None
+    downloadUrl: str | list[str] | None = None
+    installUrl: str | list[str] | None = None
+    memoryRequirements: str | list[str] | None = None
+    processorRequirements: str | list[str] | None = None
+    storageRequirements: str | list[str] | None = None
+    permissions: str | list[str] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -234,3 +262,4 @@ SoftwareApplication.model_rebuild()
 Role.model_rebuild()
 Person.model_rebuild()
 Organization.model_rebuild()
+VersionedLanguage.model_rebuild()

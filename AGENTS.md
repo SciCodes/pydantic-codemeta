@@ -48,7 +48,7 @@ When making design decisions:
 Target package:
 
 ```text
-src/codemeta_datamodel/
+src/pydantic_codemeta/
 ```
 
 This layer provides:

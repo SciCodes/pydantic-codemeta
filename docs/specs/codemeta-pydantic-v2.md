@@ -18,7 +18,7 @@ This implementation is intentionally scoped to CodeMeta metadata handling and is
 
 ### In Scope
 
-* Typed models for the CodeMeta vocabulary used by `codemeticulous`
+* Typed models for the CodeMeta vocabulary
 * JSON-LD parsing and serialization
 * Preservation of unknown properties
 * Round-trip-friendly model behavior
@@ -39,14 +39,14 @@ This implementation is intentionally scoped to CodeMeta metadata handling and is
 The implementation shall live under:
 
 ```text
-src/codemeta_datamodel/
+src/pydantic_codemeta/
 ```
 
-This package is an internal implementation detail of `codemeticulous` intended to provide convenient typed data models for in-memory CodeMeta work.
+This package provides typed data models for in-memory CodeMeta work.
 
 Although the current implementation target is Pydantic v2, the architecture should remain focused on the CodeMeta information model rather than framework-specific implementation details.
 
-The source tree should be organized so the model layer remains easy to maintain and can be extracted later if needed, but standalone extraction is explicitly out of scope for this work.
+The source tree should be organized so the model layer remains easy to maintain.
 
 ## Future Compatibility
 
@@ -170,7 +170,7 @@ The implementation should be designed so that future CodeMeta vocabulary release
 
 ## Vocabulary Coverage
 
-The implementation shall support the CodeMeta vocabulary required for in-memory metadata handling within `codemeticulous`.
+The implementation shall support the CodeMeta vocabulary required for in-memory metadata handling.
 
 Coverage includes, but is not limited to, the following categories.
 

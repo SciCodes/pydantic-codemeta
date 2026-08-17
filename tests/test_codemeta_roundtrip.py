@@ -4,7 +4,7 @@ import json
 from datetime import date
 from pathlib import Path
 
-from codemeta_datamodel import (
+from pydantic_codemeta import (
     CodeMeta,
     ComputerLanguage,
     Organization,

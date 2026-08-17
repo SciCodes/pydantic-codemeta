@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "codemeticulous"
+name = "pydantic-codemeta"
 version = "0.1.0"
 description = "CodeMeta-focused schema.org models built with Pydantic v2"
 readme = "README.md"
@@ -15,7 +15,8 @@ authors = [
 ]
 dependencies = [
     "pydantic>=2,<3",
-    "typing-extensions>=4.7; python_version<'3.11'",
+    "pyyaml>=6,<7",
+    "typing-extensions>=4.7; python_version<'3.13'",
 ]
 
 [project.optional-dependencies]

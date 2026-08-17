@@ -16,6 +16,7 @@ from .types import (
     ScholarlyArticle,
     SoftwareApplication,
     SoftwareSourceCode,
+    VersionedLanguage,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "SoftwareApplication",
     "SoftwareSourceCode",
     "Thing",
+    "VersionedLanguage",
 ]

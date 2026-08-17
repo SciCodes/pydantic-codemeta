@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from codemeta_datamodel import (
+from pydantic_codemeta import (
     CodeMeta,
     ComputerLanguage,
     ContactPoint,
