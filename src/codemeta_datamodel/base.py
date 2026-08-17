@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing_extensions import Self
 
 
 class SchemaOrgBase(BaseModel):
@@ -32,7 +33,7 @@ class SchemaOrgBase(BaseModel):
         )
 
     @classmethod
-    def from_jsonld(cls, data: dict[str, object]) -> SchemaOrgBase:
+    def from_jsonld(cls, data: dict[str, object]) -> Self:
         """Parse a JSON-LD dictionary into a model instance."""
 
         return cls.model_validate(data)
@@ -46,6 +47,7 @@ class Thing(SchemaOrgBase):
     description: str | None = None
     url: str | None = None
     identifier: str | PropertyValue | list[str | PropertyValue] | None = None
+    sameAs: str | None = None
 
 
 class PropertyValue(Thing):

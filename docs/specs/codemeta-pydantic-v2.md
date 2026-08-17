@@ -39,7 +39,7 @@ This implementation is intentionally scoped to CodeMeta metadata handling and is
 The implementation shall live under:
 
 ```text
-src/codemeta_pydantic/
+src/codemeta_datamodel/
 ```
 
 This package is an internal implementation detail of `codemeticulous` intended to provide convenient typed data models for in-memory CodeMeta work.

@@ -10,7 +10,14 @@ from .types import SoftwareSourceCode
 
 
 class CodeMeta(SoftwareSourceCode):
-    """Convenience wrapper for CodeMeta JSON-LD documents."""
+    """Convenience wrapper for CodeMeta JSON-LD documents.
+
+    This model is version-locked to CodeMeta 3.0. The ``@context`` and
+    ``@type`` fields are fixed and cannot be overridden. To handle other
+    CodeMeta versions (e.g. a future v4), use :class:`SoftwareSourceCode`
+    directly so the declared ``@context`` is preserved through round-trip
+    serialization.
+    """
 
     context: str = Field(
         "https://w3id.org/codemeta/3.0",

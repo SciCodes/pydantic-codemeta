@@ -12,6 +12,8 @@ Agents should optimize for, in priority order:
 4. Minimal complexity
 5. Backwards-compatible evolution
 
+Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification (e.g. `feat:`, `fix:`, `docs:`, `refactor:`).
+
 ---
 
 ## Before Making Any Substantial Change
