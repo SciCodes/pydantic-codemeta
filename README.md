@@ -14,6 +14,19 @@ uv sync --extra test --group dev
 uv run pytest -q
 ```
 
+## CodeMeta model boundaries
+
+`CodeMetaV3` is the typed/open v3 `SoftwareSourceCode` envelope and requires
+the v3 context. `CodeMeta` is the canonical open model: it defaults to v3 but
+preserves any explicitly supplied string context. Both preserve unknown
+properties and perform no implicit migrations during direct validation.
+
+The explicit `normalize_jsonld_context` and `migrate_legacy_codemeta` helpers
+are root-only transforms. Dict-context normalization is intentionally lossy
+because it removes the dict context. `CodeMeta.from_jsonld` is a one-release
+compatibility shim that applies both transforms, parses v3, and adapts to
+`CodeMeta`; use direct model validation when no transforms are wanted.
+
 ## Common Make Targets
 
 ```bash

@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from pydantic_codemeta import (
     CodeMeta,
+    CodeMetaV3,
     ComputerLanguage,
     ContactPoint,
     CreativeWork,
@@ -159,6 +160,132 @@ def test_scholarly_article_type() -> None:
     assert payload["url"] == "https://doi.org/10.1000/example-paper"
 
 
+def test_unknown_creative_work_subtype_round_trips_as_generic_work() -> None:
+    work = CreativeWork.model_validate(
+        {"@type": "WebApplication", "name": "Example application"}
+    )
+
+    assert type(work) is CreativeWork
+    assert work.to_jsonld()["@type"] == "WebApplication"
+
+
+def test_scholarly_article_remains_known_citation_subtype() -> None:
+    model = CodeMeta.from_jsonld(
+        {
+            "@context": "https://w3id.org/codemeta/3.0",
+            "@type": "SoftwareSourceCode",
+            "citation": {
+                "@type": "ScholarlyArticle",
+                "name": "A paper",
+            },
+        }
+    )
+
+    assert isinstance(model.citation, ScholarlyArticle)
+
+
+@pytest.mark.parametrize("field", ["citation", "license"])
+@pytest.mark.parametrize("type_key", ["@type", "type"])
+def test_known_non_creative_work_relationship_is_rejected(field: str, type_key: str) -> None:
+    with pytest.raises(ValidationError):
+        SoftwareSourceCode(**{field: {type_key: "Person", "name": "Ada"}})
+
+
+def test_unknown_creative_work_subtype_remains_generic_in_citation() -> None:
+    model = SoftwareSourceCode(
+        citation={"@type": "WebApplication", "name": "Web app"}
+    )
+
+    assert type(model.citation) is CreativeWork
+    assert model.to_jsonld()["citation"]["@type"] == "WebApplication"
+
+
+def test_software_application_is_valid_creative_work_citation() -> None:
+    model = SoftwareSourceCode(
+        citation={"@type": "SoftwareApplication", "name": "Desktop app"}
+    )
+
+    assert type(model.citation) is CreativeWork
+    assert model.to_jsonld()["citation"]["@type"] == "SoftwareApplication"
+
+
+def test_software_relations_accept_structured_and_string_references() -> None:
+    model = SoftwareSourceCode(
+        softwareRequirements=[
+            {"@type": "SoftwareSourceCode", "name": "Desktop app"},
+            "https://example.org/runtime",
+        ],
+        softwareSuggestions={"@type": "SoftwareSourceCode", "name": "Suggested app"},
+        hasSourceCode=[
+            {"@type": "SoftwareSourceCode", "name": "Source tree"},
+            "https://example.org/source",
+        ],
+        isSourceCodeOf=[
+            {"@type": "SoftwareApplication", "name": "Application"},
+            "https://example.org/project",
+        ],
+    )
+
+    assert isinstance(model.softwareRequirements[0], SoftwareSourceCode)
+    assert model.softwareRequirements[1] == "https://example.org/runtime"
+    assert isinstance(model.softwareSuggestions, SoftwareSourceCode)
+    assert isinstance(model.hasSourceCode[0], SoftwareSourceCode)
+    assert model.hasSourceCode[1] == "https://example.org/source"
+    assert isinstance(model.isSourceCodeOf[0], SoftwareApplication)
+    assert model.isSourceCodeOf[1] == "https://example.org/project"
+
+    payload = model.to_jsonld()
+    assert payload["softwareRequirements"][0]["@type"] == "SoftwareSourceCode"
+    assert payload["softwareSuggestions"]["@type"] == "SoftwareSourceCode"
+    assert payload["hasSourceCode"][0]["@type"] == "SoftwareSourceCode"
+    assert payload["isSourceCodeOf"][0]["@type"] == "SoftwareApplication"
+
+
+def test_software_relation_strings_remain_supported() -> None:
+    model = SoftwareSourceCode(
+        softwareRequirements="Python",
+        softwareSuggestions=["R"],
+        hasSourceCode="https://example.org/source",
+        isSourceCodeOf=["https://example.org/project"],
+    )
+
+    assert model.softwareRequirements == "Python"
+    assert model.softwareSuggestions == ["R"]
+    assert model.hasSourceCode == "https://example.org/source"
+    assert model.isSourceCodeOf == ["https://example.org/project"]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("softwareRequirements", {"@type": "SoftwareApplication"}),
+        ("softwareSuggestions", {"@type": "SoftwareApplication"}),
+        ("hasSourceCode", {"@type": "CreativeWork"}),
+        ("isSourceCodeOf", {"@type": "SoftwareSourceCode"}),
+        ("isSourceCodeOf", {"@type": "CreativeWork"}),
+    ],
+)
+def test_software_relations_reject_out_of_range_structured_values(
+    field: str, value: dict[str, str]
+) -> None:
+    with pytest.raises(ValidationError):
+        SoftwareSourceCode(**{field: value})
+
+
+def test_raw_union_citation_classification() -> None:
+    generic = SoftwareSourceCode(
+        citation={"@type": "WebApplication", "name": "Web app"}
+    )
+    scholarly = SoftwareSourceCode(
+        citation={"@type": "ScholarlyArticle", "name": "Paper"}
+    )
+
+    assert type(generic.citation) is CreativeWork
+    assert isinstance(scholarly.citation, ScholarlyArticle)
+    assert generic.to_jsonld()["citation"]["@type"] == "WebApplication"
+    assert scholarly.to_jsonld()["citation"]["@type"] == "ScholarlyArticle"
+
+
 def test_review_type() -> None:
     review = Review(
         reviewBody="Well-documented and reproducible.",
@@ -297,7 +424,7 @@ def test_same_as_field_preserved() -> None:
 
 def test_codemeta_rejects_non_3_0_context() -> None:
     with pytest.raises(ValidationError):
-        CodeMeta.from_jsonld(
+        CodeMetaV3.from_jsonld(
             {
                 "@context": "https://w3id.org/codemeta/4.0",
                 "@type": "SoftwareSourceCode",

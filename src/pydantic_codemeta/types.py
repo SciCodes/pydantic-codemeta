@@ -26,6 +26,40 @@ def _parse_iso_date(value: date | str | None) -> date | str | None:
         return value
 
 
+_NON_CREATIVE_WORK_TYPES = {
+    "Person",
+    "Organization",
+    "Role",
+    "ContactPoint",
+    "PostalAddress",
+    "ComputerLanguage",
+    "VersionedLanguage",
+    "PropertyValue",
+}
+
+
+def _reject_known_non_creative_work(value):
+    """Reject known non-CreativeWork nodes without inspecting nested values."""
+
+    values = value if isinstance(value, list) else [value]
+    for item in values:
+        if isinstance(item, dict):
+            types = {
+                type_name
+                for type_name in (item.get("@type"), item.get("type"))
+                if isinstance(type_name, str)
+            }
+        else:
+            types = {getattr(item, "type", None)}
+        known_type = next(
+            (type_name for type_name in types if type_name in _NON_CREATIVE_WORK_TYPES),
+            None,
+        )
+        if known_type is not None:
+            raise ValueError(
+                f"{known_type} is not valid in a CreativeWork relationship field"
+            )
+    return value
 # ---------------------------------------------------------------------------
 # Simple types
 # ---------------------------------------------------------------------------
@@ -112,7 +146,7 @@ AgentField: TypeAlias = Agent | list[Agent]
 class CreativeWork(Thing):
     """A schema.org CreativeWork — base for software, articles, reviews, etc."""
 
-    type: Literal["CreativeWork"] = Field("CreativeWork", alias="@type")
+    type: str = Field("CreativeWork", alias="@type")
     author: AgentField | None = None
     contributor: AgentField | None = None
     maintainer: AgentField | None = None
@@ -126,7 +160,7 @@ class CreativeWork(Thing):
     provider: AgentField | None = None
     producer: AgentField | None = None
     license: CreativeWork | str | list[CreativeWork | str] | None = None
-    citation: CreativeWork | ScholarlyArticle | str | list[CreativeWork | ScholarlyArticle | str] | None = None
+    citation: ScholarlyArticle | CreativeWork | str | list[ScholarlyArticle | CreativeWork | str] | None = None
     review: Review | str | None = None
     isPartOf: CreativeWork | str | list[CreativeWork | str] | None = None
     hasPart: CreativeWork | str | list[CreativeWork | str] | None = None
@@ -144,6 +178,11 @@ class CreativeWork(Thing):
         """Convert valid ISO date strings to ``date`` objects."""
 
         return _parse_iso_date(value)
+
+    @field_validator("license", "citation", "isPartOf", "hasPart", mode="before")
+    @classmethod
+    def validate_creative_work_relationship(cls, value):
+        return _reject_known_non_creative_work(value)
 
 
 class MediaObject(CreativeWork):
@@ -201,7 +240,7 @@ class SoftwareSourceCode(CreativeWork):
     processorRequirements: str | list[str] | None = None
     releaseNotes: str | list[str] | None = None
     softwareHelp: CreativeWork | str | list[CreativeWork | str] | None = None
-    softwareRequirements: str | list[str] | None = None
+    softwareRequirements: SoftwareSourceCode | str | list[SoftwareSourceCode | str] | None = None
     softwareVersion: str | None = None
     storageRequirements: str | list[str] | None = None
     fileFormat: str | list[str] | None = None
@@ -216,12 +255,17 @@ class SoftwareSourceCode(CreativeWork):
     embargoDate: date | str | None = None
     embargoEndDate: date | str | None = None
     funding: str | list[str] | None = None
-    hasSourceCode: str | list[str] | None = None
-    isSourceCodeOf: str | list[str] | None = None
+    hasSourceCode: SoftwareSourceCode | str | list[SoftwareSourceCode | str] | None = None
+    isSourceCodeOf: SoftwareApplication | str | list[SoftwareApplication | str] | None = None
     issueTracker: str | list[str] | None = None
     readme: str | list[str] | None = None
     referencePublication: ScholarlyArticle | str | list[ScholarlyArticle | str] | None = None
-    softwareSuggestions: str | list[str] | None = None
+    softwareSuggestions: SoftwareSourceCode | str | list[SoftwareSourceCode | str] | None = None
+
+    @field_validator("softwareHelp", mode="before")
+    @classmethod
+    def validate_software_help_type(cls, value):
+        return _reject_known_non_creative_work(value)
 
     @field_validator("embargoDate", "embargoEndDate", mode="before")
     @classmethod

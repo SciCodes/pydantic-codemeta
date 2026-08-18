@@ -143,7 +143,13 @@ These types are included to support CodeMeta use cases and are not intended to p
 
 ## CodeMeta Model
 
-`CodeMeta` is a convenience model for in-memory manipulation of CodeMeta metadata.
+`CodeMetaV3` is the fixed-v3, typed/open `SoftwareSourceCode` envelope. Its
+context is `https://w3id.org/codemeta/3.0`, while inherited fields and unknown
+extras remain open rather than forming an exhaustive vocabulary checker.
+
+`CodeMeta` is the canonical open model for in-memory manipulation. It
+preserves an explicitly supplied string context and defaults to the v3 context.
+Neither model performs migrations during direct validation.
 
 It is not intended to be a general-purpose schema.org implementation.
 
@@ -155,6 +161,13 @@ Default serialization shall include:
   "@type": "SoftwareSourceCode"
 }
 ```
+
+The pure `normalize_jsonld_context` and `migrate_legacy_codemeta` helpers are
+explicit, root-only input transforms. Dict-context normalization flattens
+configured root prefixes and removes the dict context, so it is intentionally
+lossy; nested objects are not changed. `CodeMeta.from_jsonld` remains a
+one-release compatibility shim that applies both transforms, parses v3, and
+adapts the result to canonical `CodeMeta`.
 
 ## Vocabulary Source of Truth
 
@@ -229,10 +242,10 @@ Examples include:
 Examples include:
 
 * buildInstructions
-* contIntegration
 * continuousIntegration
+* `contIntegration` (legacy ingestion spelling, migrated explicitly)
 * developmentStatus
-* embargoDate
+* `embargoDate` (legacy ingestion spelling, migrated explicitly)
 * embargoEndDate
 * funding
 * hasSourceCode
@@ -241,6 +254,9 @@ Examples include:
 * readme
 * referencePublication
 * softwareSuggestions
+
+`creator` is a general schema.org spelling, not a current v3 CodeMeta-specific
+term. When encountered in legacy input, it is explicitly migrated to `author`.
 
 The canonical CodeMeta vocabulary remains authoritative.
 
