@@ -5,13 +5,13 @@ CodeMeta-focused schema.org models built with Pydantic v2.
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) installed
-- Python 3.12 (see `.python-version`)
+- Python 3.10 or newer (the development default is in `.python-version`)
 
 ## Quickstart (uv)
 
 ```bash
 uv sync --extra test --group dev
-uv run pytest -q
+uv run python -m pytest -q -s
 ```
 
 ## CodeMeta model boundaries
@@ -60,7 +60,7 @@ context, migration, date, collision, and round-trip contracts.
 
 ```bash
 make sync         # install runtime + test + dev dependencies with uv
-make test         # run tests
+make test         # run tests locally
 make clean        # remove build/test artifacts
 make package      # build sdist and wheel into dist/
 make check        # verify distributions with twine

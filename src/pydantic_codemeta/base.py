@@ -3,13 +3,58 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal, TypeAlias, cast
+from math import isfinite
+from typing import Annotated, Literal, TypeAlias, cast
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    JsonValue,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    model_validator,
+)
 from typing_extensions import Self
 
 
-JsonLdContextObject: TypeAlias = dict[str, JsonValue]
+def _check_raw_json_value(value: object, path: str) -> None:
+    """Reject Python-only values before Pydantic can coerce them."""
+
+    value_type = type(value)
+    if value is None or value_type in (bool, int, str):
+        return
+    if value_type is float:
+        if not isfinite(value):
+            raise ValueError(f"{path} must contain only finite JSON numbers")
+        return
+    if value_type is list:
+        for index, item in enumerate(value):
+            _check_raw_json_value(item, f"{path}[{index}]")
+        return
+    if value_type is dict:
+        for key, item in value.items():
+            if type(key) is not str:
+                raise ValueError(f"{path} must contain only string object keys")
+            _check_raw_json_value(item, f"{path}.{key}")
+        return
+    raise ValueError(f"{path} must be a raw JSON value")
+
+
+def _validate_raw_json_value(value: object) -> object:
+    _check_raw_json_value(value, "$")
+    return value
+
+
+RawJsonValue: TypeAlias = Annotated[
+    JsonValue, BeforeValidator(_validate_raw_json_value)
+]
+RawJsonObject: TypeAlias = Annotated[
+    dict[str, JsonValue], BeforeValidator(_validate_raw_json_value)
+]
+JsonLdContextObject: TypeAlias = RawJsonObject
 JsonLdContextEntry: TypeAlias = str | JsonLdContextObject | None
 JsonLdContext: TypeAlias = JsonLdContextEntry | list[JsonLdContextEntry]
 
@@ -28,7 +73,7 @@ class SchemaOrgBase(BaseModel):
         use_enum_values=True,
     )
 
-    __pydantic_extra__: dict[str, JsonValue] = Field(init=False)
+    __pydantic_extra__: dict[str, RawJsonValue] = Field(init=False)
 
     id: str | None = Field(None, alias="@id")
     type: str = Field(..., alias="@type")
@@ -117,5 +162,7 @@ class PropertyValue(Thing):
     """A schema.org structured property value."""
 
     type: Literal["PropertyValue"] = Field("PropertyValue", alias="@type")
-    value: str | int | float | None = None
+    value: (
+        StrictBool | str | StrictInt | StrictFloat | RawJsonObject | None
+    ) = None
     property_id: str | None = Field(None, alias="propertyID")

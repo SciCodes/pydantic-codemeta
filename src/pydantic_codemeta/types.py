@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal, TypeAlias
 
-from pydantic import Field, field_validator
+from pydantic import Field, StrictBool, StrictFloat, StrictInt, field_validator
 
-from .base import JsonLdContext, PropertyValue, Thing
+from .base import JsonLdContext, PropertyValue, RawJsonObject, Thing
 
 
 def _parse_iso_date(value: object) -> date | str | None:
@@ -37,32 +37,6 @@ _NON_CREATIVE_WORK_TYPES = {
     "ComputerLanguage",
     "PropertyValue",
 }
-
-
-def _reject_known_non_creative_work(value: object) -> object:
-    """Reject known non-CreativeWork nodes without interpreting unknown types."""
-
-    values = value if isinstance(value, list) else [value]
-    for item in values:
-        if isinstance(item, dict):
-            # Both forms are valid package input: @type is JSON-LD and type is
-            # the corresponding Python field name accepted by Pydantic.
-            types = {
-                type_name
-                for type_name in (item.get("@type"), item.get("type"))
-                if isinstance(type_name, str)
-            }
-        else:
-            types = {getattr(item, "type", None)}
-        known_type = next(
-            (type_name for type_name in types if type_name in _NON_CREATIVE_WORK_TYPES),
-            None,
-        )
-        if known_type is not None:
-            raise ValueError(
-                f"{known_type} is not valid in a CreativeWork relationship field"
-            )
-    return value
 
 
 class ContactPoint(Thing):
@@ -149,7 +123,7 @@ class CreativeWork(Thing):
     editor: Person | list[Person] | None = None
     publisher: PartyField | None = None
     copyright_holder: PartyField | None = Field(None, alias="copyrightHolder")
-    copyright_year: int | None = Field(None, alias="copyrightYear")
+    copyright_year: StrictInt | None = Field(None, alias="copyrightYear")
     funder: PartyField | None = None
     sponsor: PartyField | None = None
     provider: PartyField | None = None
@@ -171,7 +145,7 @@ class CreativeWork(Thing):
     )
     encoding: MediaObject | list[MediaObject] | None = None
     keywords: str | list[str] | None = None
-    position: int | str | None = None
+    position: StrictInt | str | None = None
     date_created: date | str | None = Field(None, alias="dateCreated")
     date_modified: date | str | None = Field(None, alias="dateModified")
     date_published: date | str | None = Field(None, alias="datePublished")
@@ -181,10 +155,12 @@ class CreativeWork(Thing):
     def parse_dates(cls, value: object) -> date | str | None:
         return _parse_iso_date(value)
 
-    @field_validator("license", "citation", "is_part_of", "has_part", mode="before")
+    @field_validator("type")
     @classmethod
-    def validate_creative_work_relationship(cls, value: object) -> object:
-        return _reject_known_non_creative_work(value)
+    def reject_known_non_creative_work_type(cls, value: str) -> str:
+        if value in _NON_CREATIVE_WORK_TYPES:
+            raise ValueError(f"{value} is not a CreativeWork type")
+        return value
 
 
 class MediaObject(CreativeWork):
@@ -200,7 +176,9 @@ class DataFeed(CreativeWork):
     """A schema.org data feed used by ``supportingData``."""
 
     type: Literal["DataFeed"] = Field("DataFeed", alias="@type")
-    data_feed_element: str | None = Field(None, alias="dataFeedElement")
+    data_feed_element: (
+        str | RawJsonObject | list[str | RawJsonObject] | None
+    ) = Field(None, alias="dataFeedElement")
 
 
 class Review(CreativeWork):
@@ -261,8 +239,16 @@ class SoftwareSourceCode(CreativeWork):
         None, alias="storageRequirements"
     )
     file_format: str | list[str] | None = Field(None, alias="fileFormat")
-    is_accessible_for_free: bool | None = Field(None, alias="isAccessibleForFree")
-    version: int | float | str | list[int | float | str] | None = None
+    is_accessible_for_free: StrictBool | None = Field(
+        None, alias="isAccessibleForFree"
+    )
+    version: (
+        StrictInt
+        | StrictFloat
+        | str
+        | list[StrictInt | StrictFloat | str]
+        | None
+    ) = None
     supporting_data: DataFeed | list[DataFeed] | None = Field(
         None, alias="supportingData"
     )
@@ -292,11 +278,6 @@ class SoftwareSourceCode(CreativeWork):
     software_suggestions: (
         SoftwareSourceCode | str | list[SoftwareSourceCode | str] | None
     ) = Field(None, alias="softwareSuggestions")
-
-    @field_validator("software_help", mode="before")
-    @classmethod
-    def validate_software_help_type(cls, value: object) -> object:
-        return _reject_known_non_creative_work(value)
 
     @field_validator("embargo_end_date", mode="before")
     @classmethod

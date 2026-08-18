@@ -9,6 +9,7 @@ from pydantic_codemeta import (
     ComputerLanguage,
     ContactPoint,
     CreativeWork,
+    DataFeed,
     Organization,
     Person,
     PostalAddress,
@@ -89,9 +90,23 @@ def test_invalid_nested_type_raises_validation_error() -> None:
         )
 
 
-def test_invalid_property_value_raises_validation_error() -> None:
+def test_property_value_preserves_boolean_and_structured_values() -> None:
+    boolean_value = PropertyValue(value=True)
+    structured_value = PropertyValue(
+        value={"@type": "FutureStructuredValue", "nested": [1, None]}
+    )
+
+    assert boolean_value.value is True
+    assert boolean_value.to_jsonld()["value"] is True
+    assert structured_value.to_jsonld()["value"] == {
+        "@type": "FutureStructuredValue",
+        "nested": [1, None],
+    }
+
+
+def test_property_value_rejects_non_json_structured_value() -> None:
     with pytest.raises(ValidationError):
-        PropertyValue(value={"unexpected": "object"})
+        PropertyValue(value={"unexpected": object()})
 
 
 # ---------------------------------------------------------------------------
@@ -202,12 +217,42 @@ def test_scholarly_article_remains_known_subtype_in_repeated_citation() -> None:
 
 @pytest.mark.parametrize("field", ["citation", "license"])
 @pytest.mark.parametrize("type_key", ["@type", "type"])
-@pytest.mark.parametrize("type_name", ["Thing", "Person"])
+@pytest.mark.parametrize(
+    "type_name",
+    [
+        "Thing",
+        "Person",
+        "Organization",
+        "Role",
+        "ContactPoint",
+        "PostalAddress",
+        "PropertyValue",
+        "ComputerLanguage",
+    ],
+)
 def test_known_non_creative_work_relationship_is_rejected(
     field: str, type_key: str, type_name: str
 ) -> None:
     with pytest.raises(ValidationError):
         SoftwareSourceCode(**{field: {type_key: type_name, "name": "Invalid"}})
+
+
+@pytest.mark.parametrize(
+    "type_name",
+    [
+        "Thing",
+        "Person",
+        "Organization",
+        "Role",
+        "ContactPoint",
+        "PostalAddress",
+        "PropertyValue",
+        "ComputerLanguage",
+    ],
+)
+def test_creative_work_rejects_known_incompatible_type(type_name: str) -> None:
+    with pytest.raises(ValidationError):
+        CreativeWork.model_validate({"@type": type_name})
 
 
 @pytest.mark.parametrize("field", ["citation", "license"])
@@ -347,6 +392,23 @@ def test_computer_language_type() -> None:
 
     assert payload["@type"] == "ComputerLanguage"
     assert payload["name"] == "Python"
+
+
+def test_data_feed_elements_preserve_structured_nodes_without_inference() -> None:
+    elements = [
+        {
+            "@type": "DataFeedItem",
+            "item": {"@type": "Person", "name": "Ada"},
+        },
+        "summary",
+    ]
+    feed = DataFeed(dataFeedElement=elements)
+
+    assert isinstance(feed.data_feed_element, list)
+    assert type(feed.data_feed_element[0]) is dict
+    assert DataFeed.from_jsonld(feed.to_jsonld()).model_dump(
+        mode="python"
+    ) == feed.model_dump(mode="python")
 
 
 def test_software_application_does_not_inherit_software_source_code_fields() -> None:

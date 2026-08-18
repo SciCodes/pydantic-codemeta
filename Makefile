@@ -7,18 +7,20 @@ DC ?= docker compose
 help:
 	@echo "Common targets:"
 	@echo "  make sync         - install project + test and dev groups with uv"
-	@echo "  make test         - run test suite"
+	@echo "  make test         - run test suite locally"
 	@echo "  make clean        - remove local build/test artifacts"
 	@echo "  make package      - build source and wheel distributions"
 	@echo "  make check        - run twine checks on built artifacts"
 	@echo "  make publish-test - upload package to TestPyPI"
 	@echo "  make publish      - upload package to PyPI"
+	@echo "  make docker-test  - run test suite in Docker"
+	@echo "  make docker-package - build distributions in Docker"
 
 sync:
 	$(UV) sync --extra test --group dev
 
 test:
-	$(DC) run --rm test
+	$(UV) run --extra test python -m pytest -q -s
 
 clean:
 	rm -rf $(DIST_DIR) build

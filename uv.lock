@@ -481,7 +481,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -499,7 +499,7 @@ dev = [
 requires-dist = [
     { name = "pydantic", specifier = ">=2,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8,<9" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13'", specifier = ">=4.7" },
+    { name = "typing-extensions", specifier = ">=4.7" },
 ]
 provides-extras = ["test"]
 

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from enum import IntEnum
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from pydantic_codemeta import (
     CODEMETA_V3_CONTEXT,
@@ -19,6 +20,14 @@ from pydantic_codemeta import (
     migrate_legacy_codemeta,
     normalize_jsonld_context,
 )
+
+
+class _ArbitraryModel(BaseModel):
+    value: int = 1
+
+
+class _JsonLikeInt(IntEnum):
+    VALUE = 1
 
 
 def test_models_keep_boundaries_and_aliases() -> None:
@@ -71,6 +80,11 @@ def test_python_names_serialize_as_jsonld_aliases() -> None:
             "@type": "SoftwareSourceCode",
             "codeRepository": "https://example.org/a",
             "code_repository": "https://example.org/b",
+        },
+        {
+            "@type": "SoftwareSourceCode",
+            "codeRepository": None,
+            "code_repository": None,
         },
     ],
 )
@@ -184,6 +198,7 @@ def test_from_jsonld_accepts_v4_string_context() -> None:
         [
             "https://w3id.org/codemeta/3.0",
             {"ex": "https://example.org/"},
+            None,
         ],
     ],
 )
@@ -260,10 +275,24 @@ def test_unknown_properties_inside_known_nodes_remain_raw() -> None:
     assert model.to_jsonld()["author"]["futureAgentNull"] is None
 
 
-def test_unknown_non_json_value_is_rejected() -> None:
+@pytest.mark.parametrize(
+    "value",
+    [
+        (1, 2),
+        {1, 2},
+        date(2024, 1, 2),
+        datetime(2024, 1, 2, 3, 4),
+        object(),
+        _ArbitraryModel(),
+        {1: "non-string key"},
+        {"nested": (1, 2)},
+        _JsonLikeInt.VALUE,
+    ],
+)
+def test_unknown_non_json_value_is_rejected(value: object) -> None:
     with pytest.raises(ValidationError):
         CodeMeta.model_validate(
-            {"@type": "SoftwareSourceCode", "futureObject": object()}
+            {"@type": "SoftwareSourceCode", "futureObject": value}
         )
 
 
@@ -406,28 +435,108 @@ def test_dates_reject_non_contract_values(value: object) -> None:
 
 
 @pytest.mark.parametrize(
-    "field",
-    ["license", "citation"],
+    ("model_type", "field", "value"),
+    [
+        (CreativeWork, "copyright_year", True),
+        (CreativeWork, "position", True),
+        (CodeMeta, "version", True),
+        (CodeMeta, "is_accessible_for_free", 1),
+    ],
 )
-def test_repeated_creative_work_fields_preserve_flat_lists(field: str) -> None:
-    value = [
-        "https://example.org/reference",
-        {"@type": "Dataset", "name": "Example data"},
-    ]
-
-    model = CreativeWork(**{field: value})
-    parsed = getattr(model, field)
-
-    assert isinstance(parsed, list)
-    assert parsed[0] == value[0]
-    assert type(parsed[1]) is CreativeWork
-    assert model.to_jsonld()[field] == value
-
-
-@pytest.mark.parametrize("field", ["license", "citation"])
-def test_repeated_creative_work_fields_reject_nested_lists(field: str) -> None:
+def test_known_numeric_and_boolean_fields_do_not_coerce_other_json_types(
+    model_type: type[SchemaOrgBase], field: str, value: object
+) -> None:
     with pytest.raises(ValidationError):
-        CreativeWork(**{field: [["https://example.org/reference"]]})
+        model_type(**{field: value})
+
+
+@pytest.mark.parametrize(
+    ("alias", "python_name", "scalar", "repeated"),
+    [
+        (
+            "programmingLanguage",
+            "programming_language",
+            {"@type": "ComputerLanguage", "name": "Python"},
+            [{"@type": "ComputerLanguage", "name": "Python"}, "R"],
+        ),
+        (
+            "license",
+            "license",
+            {"@type": "Dataset", "name": "License terms"},
+            [{"@type": "Dataset", "name": "License terms"}, "MIT"],
+        ),
+        (
+            "identifier",
+            "identifier",
+            {"@type": "PropertyValue", "value": "10.1234/example"},
+            [
+                {"@type": "PropertyValue", "value": "10.1234/example"},
+                "urn:example:tool",
+            ],
+        ),
+        (
+            "citation",
+            "citation",
+            {"@type": "ScholarlyArticle", "name": "A paper"},
+            [
+                {"@type": "ScholarlyArticle", "name": "A paper"},
+                "https://example.org/paper",
+            ],
+        ),
+        (
+            "author",
+            "author",
+            {"@type": "Person", "name": "Ada"},
+            [{"@type": "Person", "name": "Ada"}, "Research group"],
+        ),
+        (
+            "contributor",
+            "contributor",
+            {"@type": "Organization", "name": "Example Lab"},
+            [
+                {"@type": "Organization", "name": "Example Lab"},
+                "Community",
+            ],
+        ),
+        (
+            "maintainer",
+            "maintainer",
+            {"@type": "Role", "roleName": "Maintenance"},
+            [
+                {"@type": "Role", "roleName": "Maintenance"},
+                "maintainers@example.org",
+            ],
+        ),
+    ],
+)
+def test_normative_relationships_preserve_scalar_and_repeated_forms(
+    alias: str, python_name: str, scalar: object, repeated: list[object]
+) -> None:
+    scalar_model = CodeMeta.model_validate({alias: scalar})
+    repeated_model = CodeMeta.model_validate({alias: repeated})
+
+    assert not isinstance(getattr(scalar_model, python_name), list)
+    assert isinstance(getattr(repeated_model, python_name), list)
+    assert CodeMeta.from_jsonld(repeated_model.to_jsonld()).model_dump(
+        mode="python"
+    ) == repeated_model.model_dump(mode="python")
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "programmingLanguage",
+        "license",
+        "identifier",
+        "citation",
+        "author",
+        "contributor",
+        "maintainer",
+    ],
+)
+def test_normative_relationships_reject_nested_lists(field: str) -> None:
+    with pytest.raises(ValidationError):
+        CodeMeta.model_validate({field: [["https://example.org/reference"]]})
 
 
 @pytest.mark.parametrize(

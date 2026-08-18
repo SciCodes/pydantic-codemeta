@@ -129,6 +129,9 @@ def test_full_fixture_round_trips_semantically() -> None:
     original = load_fixture("full_codemeta.json")
     model = CodeMeta.from_jsonld(original)
     round_tripped = model.to_jsonld()
+    reparsed = CodeMeta.from_jsonld(round_tripped)
+
+    assert reparsed.model_dump(mode="python") == model.model_dump(mode="python")
 
     # Core fields preserved
     assert round_tripped["@context"] == original["@context"]
