@@ -18,7 +18,11 @@ def normalize_jsonld_context(data: dict[str, Any]) -> dict[str, Any]:
         return dict(data)
 
     result = dict(data)
-    configured_prefixes = tuple(key for key in context if isinstance(key, str))
+    configured_prefixes = tuple(
+        key
+        for key in context
+        if isinstance(key, str) and not key.startswith("@")
+    )
     for key in tuple(data):
         if not isinstance(key, str):
             continue

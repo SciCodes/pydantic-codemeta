@@ -2,394 +2,575 @@
 
 ## Status
 
-Draft
+Draft. This document defines the required behavior of the Pydantic v2 model
+layer in `src/pydantic_codemeta/`.
 
-## Motivation
+## Purpose
 
-The goal of this specification is to define a typed, maintainable model layer for in-memory CodeMeta metadata handling.
+The package provides typed Python models for CodeMeta metadata. It validates
+known fields, preserves unfamiliar metadata, and serializes models as JSON-LD.
+It is not a complete schema.org implementation or a closed CodeMeta
+validator.
 
-The implementation should support parsing, validation, manipulation, and serialization of CodeMeta metadata while remaining aligned with the CodeMeta vocabulary and JSON-LD representation.
+The design must support later CodeMeta releases without replacing the parser,
+serializer, extra-property handling, or basic class hierarchy.
 
-The current implementation target is Pydantic v2. The model layer should be structured so that future Pydantic upgrades can be accommodated with minimal disruption.
+## Normative Language and Sources
 
-This implementation is intentionally scoped to CodeMeta metadata handling and is not intended to provide complete schema.org coverage.
+`Must` and `must not` state requirements. `May` states permitted behavior.
+
+The following external sources define facts used by this specification:
+
+* [CodeMeta 3.0 terms](https://w3id.org/codemeta/3.0) define the current
+  property names and value ranges.
+* [The schema.org data model](https://schema.org/docs/datamodel.html) states
+  that properties may have multiple values and that JSON-LD represents those
+  values as arrays.
+* [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/) defines the permitted
+  `@context` shapes and JSON-LD keywords.
+* [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259) defines JSON values and
+  excludes `NaN` and infinity from JSON numbers.
+
+CodeMeta and schema.org define vocabulary semantics. This document separately
+defines package choices such as Python unions, accepted scalar/list forms,
+and tolerant string references. Those package choices are normative for this
+library even when they are broader than a vocabulary range.
+
+No requirement in this document predicts CodeMeta v4 terms.
 
 ## Scope
 
-### In Scope
+The package must provide:
 
-* Typed models for the CodeMeta vocabulary
-* JSON-LD parsing and serialization
-* Preservation of unknown properties
-* Round-trip-friendly model behavior
-* Support for CodeMeta-specific terms and schema.org terms used by CodeMeta
-* Practical in-memory editing of metadata records
-* Validation of CodeMeta records using contemporary Pydantic APIs
+* typed models for the inventory in this document;
+* Pydantic v2 validation;
+* JSON-LD parsing and serialization;
+* Python field names and JSON-LD aliases;
+* typed nested objects for known terms;
+* recursive preservation of unknown JSON-compatible values;
+* explicit normalization and legacy migration helpers; and
+* semantic round trips through parse, serialize, and reparse.
 
-### Out of Scope
+The package does not provide:
 
-* Complete schema.org coverage
-* Automatic generation of all schema.org types
-* Standalone package extraction
-* Recreation of external schema.org model implementations
-* Exact replication of inheritance hierarchies from existing libraries
+* complete schema.org coverage;
+* general RDF processing or reasoning;
+* remote context loading;
+* dynamic model generation from `@type` or `@context`;
+* automatic vocabulary-version migration during parsing; or
+* lexical or byte-for-byte JSON preservation.
 
-## Packaging and Source Tree
+## Architecture
 
-The implementation shall live under:
+The class relationship is:
 
 ```text
-src/pydantic_codemeta/
+SchemaOrgBase
+    |
+  Thing
+    |
+CreativeWork
+    |
+SoftwareSourceCode
+    |
+ CodeMeta
+    |
+CodeMetaV3
 ```
 
-This package provides typed data models for in-memory CodeMeta work.
+`SchemaOrgBase` provides common validation, aliases, extra-property storage,
+and JSON-LD helpers. `Thing`, `CreativeWork`, and `SoftwareSourceCode` are
+stable information-model classes. They are not tied to one CodeMeta release.
 
-Although the current implementation target is Pydantic v2, the architecture should remain focused on the CodeMeta information model rather than framework-specific implementation details.
+`CodeMeta` is the open document model. It defaults to the CodeMeta 3.0 context
+but accepts other supported context values. `CodeMetaV3` specializes
+`CodeMeta` by requiring the CodeMeta 3.0 context.
 
-The source tree should be organized so the model layer remains easy to maintain.
+Other concrete schema.org classes may inherit from `Thing` or `CreativeWork`
+where that relationship is semantically correct. Python inheritance need not
+copy the complete schema.org hierarchy.
 
-## Future Compatibility
+A version binding constrains version-specific behavior. It must not reject an
+unknown property merely because that property is absent from the known
+version's typed inventory.
 
-This work is being structured with the expectation that CodeMeta will continue to evolve, including future CodeMeta v4 changes.
+## Required Model Types
 
-The implementation should favor clean extensibility and practical metadata handling over assumptions tied exclusively to the current CodeMeta release.
+The public model inventory is:
 
-## Design Principles
+* `SchemaOrgBase`
+* `Thing`
+* `PropertyValue`
+* `ContactPoint`
+* `PostalAddress`
+* `Organization`
+* `Person`
+* `Role`
+* `ComputerLanguage`
+* `CreativeWork`
+* `MediaObject`
+* `DataFeed`
+* `Review`
+* `ScholarlyArticle`
+* `SoftwareSourceCode`
+* `SoftwareApplication`
+* `CodeMeta`
+* `CodeMetaV3`
 
-### Modern Pydantic
+`VersionedLanguage` is not a CodeMeta or schema.org type and must not be part
+of this inventory. An unfamiliar property such as `version` on a
+`ComputerLanguage` remains available as a raw extra.
 
-The implementation shall target the current supported Pydantic release series.
+## Typed and Open Coverage
 
-At the time of writing, the target is Pydantic v2.
+A property has typed coverage only when a declared Pydantic field validates
+it. A property has open coverage when it is retained as a raw extra. Open
+coverage does not imply a typed field.
 
-The implementation should use contemporary Pydantic APIs and idioms and avoid unnecessary coupling to framework internals that would make future upgrades difficult.
+The following table is the complete required typed-field inventory for this
+version. Names in the table are JSON-LD aliases. Each model also inherits the
+fields of its parent. A field not listed here is not part of the canonical
+typed API, even if it is valid CodeMeta, schema.org, or extension metadata.
+Such a field must still round-trip as an extra.
 
-### JSON-LD First
+Adding another first-class field changes the typed API and requires a
+specification update.
 
-The model layer shall support direct parsing and serialization of JSON-LD structures, including support for:
+| Model | Fields introduced by that model |
+| --- | --- |
+| `SchemaOrgBase` | `@id`, `@type` |
+| `Thing` | `name`, `description`, `url`, `identifier`, `relatedLink`, `sameAs` |
+| `PropertyValue` | `value`, `propertyID` |
+| `ContactPoint` | `contactType`, `email` |
+| `PostalAddress` | `streetAddress`, `addressLocality`, `addressRegion`, `postalCode`, `addressCountry` |
+| `Organization` | `email`, `contactPoint`, `address` |
+| `Person` | `email`, `givenName`, `familyName`, `affiliation`, `contactPoint`, `address` |
+| `Role` | `roleName`, `startDate`, `endDate`, `author` |
+| `ComputerLanguage` | no fields beyond `Thing` |
+| `CreativeWork` | `author`, `contributor`, `editor`, `publisher`, `copyrightHolder`, `copyrightYear`, `funder`, `sponsor`, `provider`, `producer`, `license`, `citation`, `review`, `isPartOf`, `hasPart`, `encoding`, `keywords`, `position`, `dateCreated`, `dateModified`, `datePublished` |
+| `MediaObject` | `contentUrl`, `encodingFormat`, `contentSize` |
+| `DataFeed` | `dataFeedElement` |
+| `Review` | `reviewBody`, `reviewAspect` |
+| `ScholarlyArticle` | no fields beyond `CreativeWork` |
+| `SoftwareSourceCode` | `@context`, `codeRepository`, `programmingLanguage`, `runtimePlatform`, `targetProduct`, `applicationCategory`, `applicationSubCategory`, `downloadUrl`, `fileSize`, `installUrl`, `memoryRequirements`, `operatingSystem`, `permissions`, `processorRequirements`, `releaseNotes`, `softwareHelp`, `softwareRequirements`, `softwareVersion`, `storageRequirements`, `fileFormat`, `isAccessibleForFree`, `version`, `supportingData`, `maintainer`, `buildInstructions`, `continuousIntegration`, `developmentStatus`, `embargoEndDate`, `funding`, `hasSourceCode`, `isSourceCodeOf`, `issueTracker`, `readme`, `referencePublication`, `softwareSuggestions` |
+| `SoftwareApplication` | `applicationCategory`, `applicationSubCategory`, `operatingSystem`, `softwareVersion`, `downloadUrl`, `installUrl`, `memoryRequirements`, `processorRequirements`, `storageRequirements`, `permissions`, `supportingData` |
+| `CodeMeta` | no new vocabulary fields; supplies the open context default |
+| `CodeMetaV3` | no new vocabulary fields; constrains the context to CodeMeta 3.0 |
 
-* `@context`
-* `@type`
-* `@id`
+Every listed field must have an explicit type. `Any` is not permitted for a
+known field. Its scalar value types must follow the CodeMeta 3.0 range or the
+relevant schema.org range. Text, URL, compact IRI, and other string references
+use `str` unless this document names a structured model. The package may use
+unions with `str` to retain practical references that cannot be resolved
+locally.
 
-Serialization shall produce schema.org-compatible field names using aliases.
+The cardinalities and unions in the normative mapping table below take
+precedence over a narrower first-pass implementation.
 
-### Explicit Typing
+### Legacy Property Names
 
-Relations shall be represented using explicit unions of supported node types rather than untyped containers.
+The following names are not typed fields:
 
-Example:
+* `creator`
+* `contIntegration`
+* `embargoDate`
+
+`from_jsonld()` preserves them as extras. Explicit legacy migration renames
+them as follows:
+
+* `creator` to `author`
+* `contIntegration` to `continuousIntegration`
+* `embargoDate` to `embargoEndDate`
+
+The canonical and legacy names may coexist during ordinary parsing. Migration
+must reject an input containing both names in one pair.
+
+## Python Names and JSON-LD Aliases
+
+Python fields use snake_case. JSON-LD serialization uses the exact aliases in
+the typed inventory. Examples include:
+
+```text
+code_repository        <-> codeRepository
+continuous_integration <-> continuousIntegration
+property_id            <-> propertyID
+context                <-> @context
+type                   <-> @type
+id                     <-> @id
+```
+
+Construction may use a Python name or its alias. One input must not contain
+both forms for the same field. Collision detection is based on key presence,
+before value validation. It does not depend on truthiness or equality.
+
+Both of these inputs must fail:
 
 ```python
-AuthorType = Person | Organization | Role | str
-AuthorField = AuthorType | list[AuthorType]
+{"code_repository": None, "codeRepository": None}
+{"code_repository": "x", "codeRepository": "x"}
 ```
 
-### Forward Compatibility
+This rule also applies to `id` and `@id`, `type` and `@type`, and `context`
+and `@context`.
 
-Models shall permit unknown properties and preserve them during round-trip serialization.
+An unknown property whose name matches a Python method, such as `model_dump`,
+remains in `model_extra` and must serialize under its original name.
 
-Unknown properties shall be stored and round-tripped as raw JSON-compatible values without additional type inference, coercion, or interpretation.
+## Raw JSON Values
 
-Implementations should not attempt to dynamically construct typed objects from unknown properties.
+Unknown properties must already contain raw JSON-compatible values. The
+package must not coerce an unknown value into JSON-compatible data.
 
-This behavior is required to preserve forward compatibility with future CodeMeta releases, community extensions, and schema.org evolution.
+The recursive definition is:
 
-### Extensibility
+```text
+JSONValue =
+    null
+    | boolean
+    | integer
+    | finite floating-point number
+    | string
+    | array of JSONValue
+    | object with string keys and JSONValue values
+```
 
-The model hierarchy should make it straightforward to add additional CodeMeta vocabulary terms and supporting types in future releases without requiring substantial refactoring.
+Validation applies at every nesting depth. Therefore:
 
-## Supported Types
+* `NaN`, positive infinity, and negative infinity are rejected;
+* tuples are not converted to arrays and are rejected;
+* sets are rejected;
+* `datetime.date` and `datetime.datetime` are rejected as unknown values;
+* arbitrary Python objects are rejected;
+* arbitrary Pydantic models are rejected; and
+* a dictionary with any non-string key is rejected.
 
-The implementation shall provide the following types:
+Known fields still perform their documented type validation and conversion.
+These raw-value rules apply only to unknown properties and raw context-object
+contents.
 
-### Core Types
+Unknown JSON-LD keywords, prefixed properties, scalars, arrays, and nested
+objects follow the same rule. The package must not infer a Pydantic model from
+an unknown object's `@type`.
 
-* Thing
-* Person
-* Organization
-* ContactPoint
-* PostalAddress
-* PropertyValue
-* CreativeWork
-* MediaObject
-* DataFeed
-* Review
-* Role
-* ComputerLanguage
-* ScholarlyArticle
-* SoftwareSourceCode
-* SoftwareApplication
+## JSON-LD Keywords
 
-### Infrastructure Types
+### `@context`
 
-* SchemaOrgBase
-* CodeMeta
+The package uses these conceptual types:
 
-### Supporting Type Rationale
+```python
+JSONValue = None | bool | int | finite_float | str \
+    | list[JSONValue] | dict[str, JSONValue]
+ContextObject = dict[str, JSONValue]
+ContextEntry = str | ContextObject | None
+Context = ContextEntry | list[ContextEntry]
+```
 
-The following supporting types are included because they are referenced by the CodeMeta vocabulary and related schema.org terms:
+`finite_float` means a Python `float` for which `math.isfinite(value)` is
+true. The aliases above describe recursive types; an implementation may use
+equivalent Pydantic-compatible aliases.
 
-| Type               | Purpose                                                                        |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `PostalAddress`    | Supports structured `Person.address` values.                                   |
-| `MediaObject`      | Supports `encoding` and related media representations.                         |
-| `DataFeed`         | Supports `supportingData`.                                                     |
-| `ScholarlyArticle` | Supports `referencePublication`.                                               |
-| `ComputerLanguage` | Supports structured `programmingLanguage` values.                              |
-| `Role`             | Supports contributor role modeling via `roleName`, `startDate`, and `endDate`. |
+A context array may be empty. It may contain strings, context objects, and
+null entries in any combination. It must not contain another array.
 
-These types are included to support CodeMeta use cases and are not intended to provide complete schema.org coverage.
+`from_jsonld()` must preserve whether the context was a string, object, array,
+or null. It must preserve context-array order and null entries. The package
+performs structural validation only: it does not fetch a remote context or
+fully validate context term definitions.
 
-## CodeMeta Model
+For `CodeMeta`:
 
-`CodeMetaV3` is the fixed-v3, typed/open `SoftwareSourceCode` envelope. Its
-context is `https://w3id.org/codemeta/3.0`, while inherited fields and unknown
-extras remain open rather than forming an exhaustive vocabulary checker.
+* an omitted `@context` uses `https://w3id.org/codemeta/3.0`;
+* an explicitly supplied `@context: null` remains null and serializes as
+  `"@context": null`; and
+* another structurally valid context is preserved without an implicit upgrade
+  or downgrade.
 
-`CodeMeta` is the canonical open model for in-memory manipulation. It
-preserves an explicitly supplied string context and defaults to the v3 context.
-Neither model performs migrations during direct validation.
+`CodeMetaV3` accepts only the literal CodeMeta 3.0 context. Converting an open
+`CodeMeta` model to `CodeMetaV3` must reject another string context, a context
+object, or a context array. An absent or null context may be replaced with the
+v3 context only during an explicit v3 conversion.
 
-It is not intended to be a general-purpose schema.org implementation.
+### `@type`
 
-Default serialization shall include:
+Every concrete model must emit its correct, non-null `@type`. A caller must
+not replace a concrete class's type. Concrete classes use `Literal[...]` or an
+equivalent constraint.
+
+Typed models in this package accept one string `@type`, not an array. JSON-LD
+permits multi-valued `@type`, but supporting it is outside this typed model
+layer. A multi-valued type may still occur inside a raw unknown property.
+
+`CreativeWork` is the documented open fallback described below.
+
+### `@id`
+
+`@id` is an optional string. Parsing and serialization must preserve it. Its
+behavior does not depend on the CodeMeta version.
+
+## `CreativeWork` Fallback
+
+`CreativeWork` serves two purposes: it is the parent of known creative-work
+models, and it is the fallback for an unfamiliar creative-work subtype in a
+field that accepts `CreativeWork`.
+
+For example, this value may be parsed as `CreativeWork`:
 
 ```json
 {
-  "@context": "https://w3id.org/codemeta/3.0",
-  "@type": "SoftwareSourceCode"
+  "@type": "Dataset",
+  "name": "example"
 }
 ```
 
-The pure `normalize_jsonld_context` and `migrate_legacy_codemeta` helpers are
-explicit, root-only input transforms. Dict-context normalization flattens
-configured root prefixes and removes the dict context, so it is intentionally
-lossy; nested objects are not changed. `CodeMeta.from_jsonld` remains a
-one-release compatibility shim that applies both transforms, parses v3, and
-adapts the result to canonical `CodeMeta`.
+The parsed model's `type` must be `"Dataset"`. `to_jsonld()` must emit
+`"@type": "Dataset"`, and reparsing must produce equivalent model state. The
+fallback must not replace the supplied type with `"CreativeWork"`.
 
-## Vocabulary Source of Truth
+If the input omits `@type`, a fallback `CreativeWork` may use
+`"CreativeWork"` as its default type.
 
-The implementation shall target the CodeMeta vocabulary as defined by the canonical CodeMeta source:
+When a relationship union contains a more specific implemented class and the
+input type matches it, the parser should use that class. Otherwise it may use
+the `CreativeWork` fallback unless the type is known to be incompatible.
 
-https://w3id.org/codemeta/3.0
+A type is known to be incompatible when it names an implemented concrete
+class that does not inherit from `CreativeWork`. Examples include `Person`,
+`Organization`, `Role`, `ContactPoint`, `PostalAddress`, `PropertyValue`, and
+`ComputerLanguage`. Such a value must be rejected in a CreativeWork-only
+field.
 
-Examples, mappings, and term lists in this specification are informational only.
+An unfamiliar type that is not in the package's model inventory may use the
+fallback. The package does not perform schema.org subclass lookup or general
+RDF reasoning, so it must not claim that the unknown type is semantically a
+CreativeWork. It only preserves the node in a field whose contract permits
+the fallback.
 
-If there is any conflict between this document and the canonical CodeMeta source, the canonical source takes precedence.
+No dynamic type registry is required.
 
-The implementation should be designed so that future CodeMeta vocabulary releases, including CodeMeta v4, can be adopted without major architectural changes.
+## Normative Relationship Types and Cardinalities
 
-## Vocabulary Coverage
+CodeMeta 3.0 and schema.org define value ranges. Schema.org also permits any
+property to have multiple values. The following scalar/list policy is a
+package design choice for tolerant in-memory metadata handling.
 
-The implementation shall support the CodeMeta vocabulary required for in-memory metadata handling.
-
-Coverage includes, but is not limited to, the following categories.
-
-### Software Metadata Terms
-
-Examples include:
-
-* author
-* contributor
-* maintainer
-* publisher
-* provider
-* producer
-* funder
-* sponsor
-* citation
-* review
-* programmingLanguage
-* softwareRequirements
-* supportingData
-* identifier
-* keywords
-* license
-* version
-* dateCreated
-* dateModified
-* datePublished
-* codeRepository
-* downloadUrl
-* installUrl
-* runtimePlatform
-* operatingSystem
-* memoryRequirements
-* processorRequirements
-* storageRequirements
-* softwareHelp
-* targetProduct
-* relatedLink
-* sameAs
-
-### Person, Organization, Role, and Review Terms
-
-Examples include:
-
-* affiliation
-* contactPoint
-* address
-* reviewBody
-* reviewAspect
-* roleName
-* startDate
-* endDate
-
-### CodeMeta-Specific Terms
-
-Examples include:
-
-* buildInstructions
-* continuousIntegration
-* `contIntegration` (legacy ingestion spelling, migrated explicitly)
-* developmentStatus
-* `embargoDate` (legacy ingestion spelling, migrated explicitly)
-* embargoEndDate
-* funding
-* hasSourceCode
-* isSourceCodeOf
-* issueTracker
-* readme
-* referencePublication
-* softwareSuggestions
-
-`creator` is a general schema.org spelling, not a current v3 CodeMeta-specific
-term. When encountered in legacy input, it is explicitly migrated to `author`.
-
-The canonical CodeMeta vocabulary remains authoritative.
-
-## Role Modeling
-
-`schema:Role` is used by CodeMeta to associate a person or organization with a role description and optional date range.
-
-The implementation shall support:
-
-* `roleName`
-* `startDate`
-* `endDate`
-
-Role-aware relationships shall support:
+Each field in this table accepts its scalar form, its repeated form, or
+`None`. A repeated form is one flat list whose elements each match the scalar
+type. Nested lists are invalid. Scalar input remains scalar after parsing;
+list input remains a list.
 
 ```python
-Person | Organization | Role | str
+Agent = Person | Organization | Role | str
 ```
 
-This applies to fields such as:
+| Field | Scalar form | Repeated form |
+| --- | --- | --- |
+| `programmingLanguage` | `ComputerLanguage | str` | `list[ComputerLanguage | str]` |
+| `license` | `CreativeWork | str` | `list[CreativeWork | str]` |
+| `identifier` | `PropertyValue | str` | `list[PropertyValue | str]` |
+| `citation` | `CreativeWork | str` | `list[CreativeWork | str]` |
+| `author` | `Agent` | `list[Agent]` |
+| `contributor` | `Agent` | `list[Agent]` |
+| `maintainer` | `Agent` | `list[Agent]` |
 
-* author
-* contributor
-* maintainer
+The external vocabulary ranges are narrower in two relevant ways:
 
-and similar contributor-style relationships.
+* CodeMeta lists `Organization | Person` for `author` and `contributor`, and
+  `Person` for `maintainer`.
+* CodeMeta uses `CreativeWork | URL` for `license` and `citation`,
+  `ComputerLanguage | Text` for `programmingLanguage`, and
+  `PropertyValue | URL` for `identifier`.
 
-## Normative Field Type Mappings
+Accepting `Role` in contributor-style fields and accepting `str` for text,
+URLs, compact IRIs, or unresolved references are package choices. They do not
+change the CodeMeta vocabulary ranges.
 
-The following mappings are normative.
+Plain JSON arrays represent repeated values. Their RDF meaning is unordered
+unless the document uses explicit JSON-LD list semantics. This package
+preserves input array order but does not add `@list` automatically.
 
-| Field                 | Accepted Type                                                      |
-| --------------------- | ------------------------------------------------------------------ |
-| `programmingLanguage` | `ComputerLanguage \| str \| list[ComputerLanguage \| str] \| None` |
-| `license`             | `CreativeWork \| str \| None`                                      |
-| `identifier`          | `str \| PropertyValue \| list[str \| PropertyValue] \| None`       |
-| `citation`            | `CreativeWork \| str \| None`                                      |
-| `author`              | `Person \| Organization \| Role \| str \| list[...] \| None`       |
-| `contributor`         | `Person \| Organization \| Role \| str \| list[...] \| None`       |
-| `maintainer`          | `Person \| Organization \| Role \| str \| list[...] \| None`       |
+## Date Values
 
-## Serialization Contract
+Known date fields accept `datetime.date` or `str`.
 
-The canonical serialization format shall be:
+* A valid ISO date string is converted to `datetime.date`.
+* A non-date string is retained as `str`.
+* An ISO datetime string remains a string; it is not truncated to a date.
+* A native `datetime.datetime` is rejected.
+* Other input types are rejected.
+
+Serialization emits a parsed `datetime.date` as an ISO date string. This
+conversion is intentional and does not require lexical round-trip identity.
+
+## Parsing and Explicit Transforms
+
+### Ordinary Parsing
+
+`from_jsonld()` validates the input without changing property names or
+context. It must not:
+
+* normalize a context;
+* flatten prefixed keys;
+* rename legacy properties;
+* add a migration; or
+* upgrade or downgrade a vocabulary version.
+
+Known fields become typed values. Unknown fields remain raw JSON values.
+
+### Context Normalization
+
+`normalize_jsonld_context()` is an explicit, root-only representation
+transform. It is a small compatibility helper, not a JSON-LD expansion
+algorithm.
+
+If `@context` is not an object, the helper returns a shallow copy without
+changing the context or any property name. For a context object:
+
+1. Each non-keyword context key is treated as a configured prefix. A keyword
+   starts with `@` and is not a prefix.
+2. For each root property named `prefix:localName`, if `prefix` is configured,
+   the helper renames that property to `localName`.
+3. If `localName` is already present at the root, the helper raises an error.
+   Collision checks use key presence, not values.
+4. Root properties with an unconfigured prefix remain unchanged.
+5. The helper removes the context object after processing, even when no root
+   property used a configured prefix.
+6. The helper does not inspect or change nested objects.
+
+This operation is intentionally lossy and is outside the ordinary round-trip
+guarantee.
+
+### Legacy Migration
+
+`migrate_legacy_codemeta()` is an explicit, root-only property rename. It uses
+the three mappings listed under Legacy Property Names. It must not inspect
+nested objects.
+
+Migration decisions use key presence. If both an old and new name are
+present, migration must fail even when either value is null, false, empty, or
+equal to the other value.
+
+`CodeMeta.from_legacy_jsonld()` applies context normalization and legacy
+migration, validates the result as CodeMeta v3, and returns the open
+`CodeMeta` representation. This path is intentionally lossy. Callers must use
+`from_jsonld()` when they do not request those transforms.
+
+## Serialization and Nulls
+
+`to_jsonld()` is the canonical serialization method. It emits JSON-LD aliases
+and JSON-compatible values.
+
+Null handling is:
+
+* a declared optional field whose value is `None` is omitted, whether it was
+  absent or explicitly supplied as `None`;
+* an unknown extra whose value is null remains present, at every nesting
+  depth; and
+* an explicitly supplied `@context: null` remains present.
+
+`@context` is the only declared optional field for which explicit null
+presence affects serialization. The implementation need not track input
+presence for other declared optional fields.
+
+Therefore this input:
+
+```json
+{
+  "@context": null,
+  "@type": "SoftwareSourceCode",
+  "futureProperty": null
+}
+```
+
+must serialize with both `@context` and `futureProperty` still present and
+null.
+
+The serializer must not apply Pydantic's `exclude_none=True` blindly because
+that would discard null-valued extras.
+
+The package does not add custom `.dict()`, `.json()`, or `.yaml()` methods.
+Pydantic's contemporary `model_dump()` APIs remain available for callers who
+need non-JSON-LD representations.
+
+## Round-Trip Requirement
+
+Ordinary parsing and serialization must satisfy model-equivalent round trips:
 
 ```python
-model.model_dump(
-    by_alias=True,
-    exclude_none=True,
-    mode="json",
-)
+parsed = Model.from_jsonld(original)
+serialized = parsed.to_jsonld()
+reparsed = Model.from_jsonld(serialized)
+
+assert reparsed.model_dump(mode="python") == parsed.model_dump(mode="python")
 ```
 
-All models shall expose convenience helpers for JSON-LD serialization and deserialization.
+This invariant applies to:
 
-Round-trip serialization shall preserve:
+* known typed fields;
+* unknown scalars, arrays, objects, and nulls;
+* unknown values nested inside known models;
+* context strings, objects, arrays, null entries, and explicit null context;
+* `@type` and `@id`;
+* unfamiliar `CreativeWork` subtype names;
+* dates after documented conversion; and
+* both scalar and repeated forms in the normative mapping table.
 
-* aliases
-* nested objects
-* lists
-* unknown properties
+The invariant compares model meaning, not source text. Object key order,
+whitespace, numeric spelling, and the lexical form of a parsed date need not
+match the original JSON.
 
-### `@type` Serialization Requirement
+Explicit normalization and migration are outside this guarantee. Their
+documented losses must remain isolated to the requested transform.
 
-All concrete model types shall define a non-null `@type` value.
+## Version Evolution
 
-`@type` shall always be serialized on concrete types and shall never be omitted from serialized output.
+Future CodeMeta support should normally require only:
 
-Implementations shall not model `@type` as an optional field on concrete classes.
+* adding or changing typed fields after updating this inventory;
+* adding a version-specific binding when a context constraint is useful;
+* adding tests; and
+* adding migration code only for an authoritative, required migration.
 
-This requirement exists to ensure valid JSON-LD output and reliable type discrimination during parsing and serialization.
+Future support must not require a new parser, a closed extra-property policy,
+or a replacement class hierarchy. A future context and future property must
+already be preservable by the open `CodeMeta` model before the package adds
+typed support for them.
 
-## Date Parsing and Serialization
+## Required Tests
 
-Date fields shall accept both ISO date strings and native `datetime.date` objects.
+Tests must cover:
 
-Parsing preference:
-
-* If the input is a parseable ISO 8601 date string, coerce it to `datetime.date`.
-* If the input is not parseable as a date, preserve it as `str`.
-
-This allows consumers to compare valid dates while remaining tolerant of real-world metadata that uses nonstandard date formats.
-
-## Validation Requirements
-
-The model layer shall:
-
-* Validate known field types.
-* Accept nested objects where appropriate.
-* Accept JSON-LD aliases directly.
-* Accept both Python field names and alias names during construction.
-* Preserve unknown properties.
-* Support date values represented either as strings or native date objects.
-
-Validation should remain pragmatic rather than unnecessarily restrictive.
-
-## Testing Requirements
-
-The implementation shall include fixture-based tests covering:
-
-### Model Behavior
-
-* Alias handling
-* Nested object parsing
-* JSON-LD round-trip serialization
-* Preservation of `@type`
-* Preservation of unknown properties
-* Validation failures for clearly invalid inputs
-
-### CodeMeta Documents
-
-Tests shall include representative CodeMeta documents demonstrating:
-
-* Multiple authors
-* Nested organizations
-* Structured identifiers via `PropertyValue`
-* Role-based authorship
-* Date fields
-* Reviews
-* CodeMeta-specific properties
-* Unknown extension properties
-
-Round-trip serialization of these fixtures shall preserve semantic content.
+* Python-name and alias construction;
+* presence-based alias collisions, including equal and null values;
+* correct fixed `@type` values;
+* `@id` preservation;
+* context strings, objects, arrays, null entries, and explicit null;
+* future context preservation by `CodeMeta`;
+* v3 context enforcement by `CodeMetaV3`;
+* unknown scalar, array, object, prefixed, keyword, nested, and null values;
+* rejection of every non-JSON raw-value category listed in this document;
+* canonical and legacy property coexistence during ordinary parsing;
+* explicit legacy migration and collision rejection;
+* intentionally lossy context normalization;
+* the `CreativeWork` fallback and known-incompatible rejection;
+* each scalar and repeated form in the normative mapping table;
+* valid dates, malformed strings, datetime strings, and invalid date inputs;
+* open-to-v3 and v3-to-open conversion; and
+* the second-parse round-trip invariant.
 
 ## Acceptance Criteria
 
-This work is complete when:
+The model layer conforms to this specification when:
 
-1. CodeMeta documents can be represented as typed models for in-memory use.
-2. The implementation targets the current supported Pydantic release series (currently Pydantic v2).
-3. CodeMeta documents can be serialized back to valid JSON-LD.
-4. Unknown properties survive round-trip serialization.
-5. The required CodeMeta vocabulary is represented by the model layer.
-6. All pre-existing tests in the `tests/` suite pass without modification.
-7. The implementation is covered by automated tests.
-8. The design remains extensible for future CodeMeta vocabulary revisions, including CodeMeta v4.
+1. Every model and typed field in the required inventory exists.
+2. Known fields use explicit types and JSON-LD aliases.
+3. Unknown JSON-compatible values survive recursively without inference.
+4. Non-JSON unknown values are rejected without coercion.
+5. `from_jsonld()` performs validation without normalization or migration.
+6. Explicit transforms have only their documented effects and losses.
+7. Context, type, identifier, alias, date, null, fallback, and cardinality
+   behavior match this document.
+8. Parse, serialize, and reparse produce equivalent model state.
+9. Automated tests enforce these requirements.
+10. The open model can preserve future contexts and properties without
+    knowing a future vocabulary.

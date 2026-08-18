@@ -59,7 +59,7 @@ def test_nested_models_parse_from_jsonld() -> None:
 
     assert isinstance(model.author, Person)
     assert isinstance(model.author.affiliation, Organization)
-    assert isinstance(model.author.contactPoint, ContactPoint)
+    assert isinstance(model.author.contact_point, ContactPoint)
 
 
 def test_jsonld_round_trip_preserves_unknown_fields() -> None:
@@ -134,7 +134,7 @@ def test_role_in_author_field() -> None:
     )
 
     assert isinstance(model.author, Role)
-    assert model.author.roleName == "maintainer"
+    assert model.author.role_name == "maintainer"
     assert isinstance(model.author.author, Person)
     assert model.author.author.name == "Alex Doe"
 
@@ -184,11 +184,36 @@ def test_scholarly_article_remains_known_citation_subtype() -> None:
     assert isinstance(model.citation, ScholarlyArticle)
 
 
+def test_scholarly_article_remains_known_subtype_in_repeated_citation() -> None:
+    model = CodeMeta.from_jsonld(
+        {
+            "@type": "SoftwareSourceCode",
+            "citation": [
+                {"@type": "ScholarlyArticle", "name": "A paper"},
+                {"@type": "Dataset", "name": "Supporting data"},
+            ],
+        }
+    )
+
+    assert isinstance(model.citation, list)
+    assert isinstance(model.citation[0], ScholarlyArticle)
+    assert type(model.citation[1]) is CreativeWork
+
+
 @pytest.mark.parametrize("field", ["citation", "license"])
 @pytest.mark.parametrize("type_key", ["@type", "type"])
-def test_known_non_creative_work_relationship_is_rejected(field: str, type_key: str) -> None:
+@pytest.mark.parametrize("type_name", ["Thing", "Person"])
+def test_known_non_creative_work_relationship_is_rejected(
+    field: str, type_key: str, type_name: str
+) -> None:
     with pytest.raises(ValidationError):
-        SoftwareSourceCode(**{field: {type_key: "Person", "name": "Ada"}})
+        SoftwareSourceCode(**{field: {type_key: type_name, "name": "Invalid"}})
+
+
+@pytest.mark.parametrize("field", ["citation", "license"])
+def test_known_non_creative_work_in_list_is_rejected(field: str) -> None:
+    with pytest.raises(ValidationError):
+        SoftwareSourceCode(**{field: [{"@type": "Thing", "name": "Invalid"}]})
 
 
 def test_unknown_creative_work_subtype_remains_generic_in_citation() -> None:
@@ -226,13 +251,13 @@ def test_software_relations_accept_structured_and_string_references() -> None:
         ],
     )
 
-    assert isinstance(model.softwareRequirements[0], SoftwareSourceCode)
-    assert model.softwareRequirements[1] == "https://example.org/runtime"
-    assert isinstance(model.softwareSuggestions, SoftwareSourceCode)
-    assert isinstance(model.hasSourceCode[0], SoftwareSourceCode)
-    assert model.hasSourceCode[1] == "https://example.org/source"
-    assert isinstance(model.isSourceCodeOf[0], SoftwareApplication)
-    assert model.isSourceCodeOf[1] == "https://example.org/project"
+    assert isinstance(model.software_requirements[0], SoftwareSourceCode)
+    assert model.software_requirements[1] == "https://example.org/runtime"
+    assert isinstance(model.software_suggestions, SoftwareSourceCode)
+    assert isinstance(model.has_source_code[0], SoftwareSourceCode)
+    assert model.has_source_code[1] == "https://example.org/source"
+    assert isinstance(model.is_source_code_of[0], SoftwareApplication)
+    assert model.is_source_code_of[1] == "https://example.org/project"
 
     payload = model.to_jsonld()
     assert payload["softwareRequirements"][0]["@type"] == "SoftwareSourceCode"
@@ -249,10 +274,10 @@ def test_software_relation_strings_remain_supported() -> None:
         isSourceCodeOf=["https://example.org/project"],
     )
 
-    assert model.softwareRequirements == "Python"
-    assert model.softwareSuggestions == ["R"]
-    assert model.hasSourceCode == "https://example.org/source"
-    assert model.isSourceCodeOf == ["https://example.org/project"]
+    assert model.software_requirements == "Python"
+    assert model.software_suggestions == ["R"]
+    assert model.has_source_code == "https://example.org/source"
+    assert model.is_source_code_of == ["https://example.org/project"]
 
 
 @pytest.mark.parametrize(
@@ -348,10 +373,10 @@ def test_software_source_code_supports_computer_language_in_programming_language
         }
     )
 
-    assert isinstance(model.programmingLanguage, list)
-    assert isinstance(model.programmingLanguage[0], ComputerLanguage)
-    assert model.programmingLanguage[0].name == "Python"
-    assert model.programmingLanguage[1] == "R"
+    assert isinstance(model.programming_language, list)
+    assert isinstance(model.programming_language[0], ComputerLanguage)
+    assert model.programming_language[0].name == "Python"
+    assert model.programming_language[1] == "R"
 
 
 def test_software_source_code_supports_creative_work_in_license() -> None:
@@ -405,7 +430,7 @@ def test_software_source_code_supports_review() -> None:
     )
 
     assert isinstance(model.review, Review)
-    assert model.review.reviewBody == "Great software."
+    assert model.review.review_body == "Great software."
 
 
 def test_same_as_field_preserved() -> None:
@@ -418,7 +443,7 @@ def test_same_as_field_preserved() -> None:
         }
     )
 
-    assert model.sameAs == "https://example.org/mirror"
+    assert model.same_as == "https://example.org/mirror"
     assert model.to_jsonld()["sameAs"] == "https://example.org/mirror"
 
 

@@ -1,6 +1,6 @@
 """Minimal schema.org models used for CodeMeta metadata."""
 
-from .base import PropertyValue, SchemaOrgBase, Thing
+from .base import JsonLdContext, PropertyValue, SchemaOrgBase, Thing
 from .codemeta import (
     CODEMETA_V3_CONTEXT,
     CodeMeta,
@@ -23,7 +23,6 @@ from .types import (
     ScholarlyArticle,
     SoftwareApplication,
     SoftwareSourceCode,
-    VersionedLanguage,
 )
 
 __all__ = [
@@ -34,6 +33,7 @@ __all__ = [
     "codemeta_to_codemeta_v3",
     "normalize_jsonld_context",
     "migrate_legacy_codemeta",
+    "JsonLdContext",
     "ComputerLanguage",
     "ContactPoint",
     "CreativeWork",
@@ -50,5 +50,4 @@ __all__ = [
     "SoftwareApplication",
     "SoftwareSourceCode",
     "Thing",
-    "VersionedLanguage",
 ]

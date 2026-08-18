@@ -41,7 +41,7 @@ def test_parse_full_fixture_with_multiple_authors() -> None:
     assert isinstance(model.author[0], Person)
     assert isinstance(model.author[1], Organization)
     assert isinstance(model.author[2], Role)
-    assert model.author[2].roleName == "maintainer"
+    assert model.author[2].role_name == "maintainer"
     assert isinstance(model.author[2].author, Person)
     assert model.author[2].author.name == "Alex Doe"
 
@@ -50,7 +50,7 @@ def test_property_value_identifier_is_supported() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
     assert isinstance(model.identifier, PropertyValue)
-    assert model.identifier.propertyID == "doi"
+    assert model.identifier.property_id == "doi"
 
 
 def test_unknown_fields_survive_round_trip() -> None:
@@ -66,9 +66,9 @@ def test_unknown_fields_survive_round_trip() -> None:
 def test_iso_dates_are_accepted() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
-    assert isinstance(model.dateCreated, date)
-    assert isinstance(model.dateModified, date)
-    assert isinstance(model.datePublished, date)
+    assert isinstance(model.date_created, date)
+    assert isinstance(model.date_modified, date)
+    assert isinstance(model.date_published, date)
     assert model.to_jsonld()["datePublished"] == "2024-06-01"
 
 
@@ -77,19 +77,19 @@ def test_role_dates_are_parsed() -> None:
 
     role = model.author[2]
     assert isinstance(role, Role)
-    assert isinstance(role.startDate, date)
-    assert isinstance(role.endDate, date)
-    assert role.startDate == date(2023, 1, 1)
-    assert role.endDate == date(2024, 6, 1)
+    assert isinstance(role.start_date, date)
+    assert isinstance(role.end_date, date)
+    assert role.start_date == date(2023, 1, 1)
+    assert role.end_date == date(2024, 6, 1)
 
 
 def test_programming_language_supports_computer_language_objects() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
-    assert isinstance(model.programmingLanguage, list)
-    assert isinstance(model.programmingLanguage[0], ComputerLanguage)
-    assert model.programmingLanguage[0].name == "Python"
-    assert model.programmingLanguage[1] == "R"
+    assert isinstance(model.programming_language, list)
+    assert isinstance(model.programming_language[0], ComputerLanguage)
+    assert model.programming_language[0].name == "Python"
+    assert model.programming_language[1] == "R"
 
 
 def test_citation_supports_scholarly_article() -> None:
@@ -102,25 +102,25 @@ def test_citation_supports_scholarly_article() -> None:
 def test_reference_publication_supports_scholarly_article() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
-    assert isinstance(model.referencePublication, ScholarlyArticle)
-    assert model.referencePublication.url == "https://doi.org/10.1000/example-paper"
+    assert isinstance(model.reference_publication, ScholarlyArticle)
+    assert model.reference_publication.url == "https://doi.org/10.1000/example-paper"
 
 
 def test_review_field_parses() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
     assert isinstance(model.review, Review)
-    assert model.review.reviewBody == "Well-documented and reproducible."
-    assert model.review.reviewAspect == "Documentation"
+    assert model.review.review_body == "Well-documented and reproducible."
+    assert model.review.review_aspect == "Documentation"
 
 
 def test_codemeta_specific_fields_preserved() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
-    assert model.issueTracker == "https://github.com/example/research-toolkit/issues"
+    assert model.issue_tracker == "https://github.com/example/research-toolkit/issues"
     assert model.readme == "https://github.com/example/research-toolkit/blob/main/README.md"
-    assert model.buildInstructions == "https://github.com/example/research-toolkit#building"
-    assert model.developmentStatus == "active"
+    assert model.build_instructions == "https://github.com/example/research-toolkit#building"
+    assert model.development_status == "active"
 
 
 def test_full_fixture_round_trips_semantically() -> None:

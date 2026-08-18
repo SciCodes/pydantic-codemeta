@@ -16,16 +16,45 @@ uv run pytest -q
 
 ## CodeMeta model boundaries
 
-`CodeMetaV3` is the typed/open v3 `SoftwareSourceCode` envelope and requires
-the v3 context. `CodeMeta` is the canonical open model: it defaults to v3 but
-preserves any explicitly supplied string context. Both preserve unknown
-properties and perform no implicit migrations during direct validation.
+`SchemaOrgBase` owns JSON-LD mechanics. `Thing`, `CreativeWork`, and
+`SoftwareSourceCode` are stable information-model concepts. `CodeMeta` is the
+canonical open document model, and `CodeMetaV3` specializes it by requiring
+the v3 context. A future version binding can specialize `CodeMeta` in the same
+way without changing the core hierarchy.
 
-The explicit `normalize_jsonld_context` and `migrate_legacy_codemeta` helpers
-are root-only transforms. Dict-context normalization is intentionally lossy
-because it removes the dict context. `CodeMeta.from_jsonld` is a one-release
-compatibility shim that applies both transforms, parses v3, and adapts to
-`CodeMeta`; use direct model validation when no transforms are wanted.
+`CodeMeta` defaults to v3 but preserves an explicitly supplied string, object,
+array, or null context. Known vocabulary terms are typed; unknown properties
+remain raw JSON-compatible values and survive round-trip serialization.
+
+`CodeMeta.from_jsonld` is a pure parse (`model_validate`) — it preserves the
+declared `@context` verbatim and performs no migration or normalization. Use
+it for canonical CodeMeta documents.
+
+`CodeMeta.from_legacy_jsonld` is the explicit migration path for legacy input
+that uses prefix-qualified keys (`schema:name`) or pre-v3 property names
+(`creator`, `embargoDate`, `contIntegration`). It applies
+`normalize_jsonld_context` (flattens dict `@context` prefixes, removes the
+dict context, backfills v3) and `migrate_legacy_codemeta` (renames legacy
+keys), then parses as v3 and adapts to `CodeMeta`. This is intentionally lossy:
+the dict `@context` is removed after prefix flattening.
+
+Python uses snake_case names and JSON-LD serialization uses CodeMeta/schema.org
+aliases:
+
+```python
+from pydantic_codemeta import CodeMeta
+
+model = CodeMeta(
+    name="Example",
+    code_repository="https://example.org/repository",
+    date_published="2026-08-18",
+)
+assert model.to_jsonld()["codeRepository"] == "https://example.org/repository"
+```
+
+Concrete models use one constrained `@type`; multi-valued `@type` is outside
+the typed-model scope. See `docs/specs/codemeta-pydantic-v2.md` for the full
+context, migration, date, collision, and round-trip contracts.
 
 ## Common Make Targets
 
