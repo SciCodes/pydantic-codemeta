@@ -17,7 +17,7 @@ help:
 	@echo "  make docker-package - build distributions in Docker"
 
 sync:
-	$(UV) sync --extra test --group dev
+	$(UV) sync --extra test
 
 test:
 	$(UV) run --extra test python -m pytest -q -s

@@ -37,7 +37,7 @@ spec.
 4. Run the full suite and package checks.
 
 ```bash
-uv sync --extra test --group dev
+uv sync --extra test
 uv run python -m pytest -q -s
 uv build
 uv run twine check dist/*

@@ -1,107 +1,95 @@
-# codemeta-pydantic
+# pydantic-codemeta
 
-CodeMeta-focused schema.org models built with Pydantic v2.
+Pydantic v2 models for parsing, validating, and serializing [CodeMeta](https://codemeta.github.io/) JSON-LD metadata, with typed Python APIs and round-trip preservation of unknown properties.
 
-## Prerequisites
+The package provides a typed representation of common CodeMeta and schema.org terms while preserving unknown JSON-LD properties during round trips.
 
-- [uv](https://docs.astral.sh/uv/) installed
-- Python 3.10 or newer (the development default is in `.python-version`)
+## Features
 
-## Quickstart (uv)
+- Typed CodeMeta and schema.org models built on Pydantic v2
+- JSON-LD aliases such as `@context`, `@type`, and `codeRepository`
+- Preservation of unknown JSON-compatible properties
+- Explicit legacy CodeMeta migration without implicit document rewriting
+- Typed CodeMeta 3.0 models with strict @context validation
+
+## Requirements
+
+- Python 3.11 or newer
+- Pydantic 2.x
+
+## Installation
 
 ```bash
-uv sync --extra test --group dev
-uv run python -m pytest -q -s
+python -m pip install pydantic-codemeta
 ```
 
-## CodeMeta model boundaries
+## Usage
 
-`SchemaOrgBase` owns JSON-LD mechanics. `Thing`, `CreativeWork`, and
-`SoftwareSourceCode` are stable information-model concepts. `CodeMeta` is the
-canonical open document model, and `CodeMetaV3` specializes it by requiring
-the v3 context. A future version binding can specialize `CodeMeta` in the same
-way without changing the core hierarchy.
-
-`CodeMeta` defaults to v3 but preserves an explicitly supplied string, object,
-array, or null context. Known vocabulary terms are typed; unknown properties
-remain raw JSON-compatible values and survive round-trip serialization.
-
-`CodeMeta.from_jsonld` is a pure parse (`model_validate`) — it preserves the
-declared `@context` verbatim and performs no migration or normalization. Use
-it for canonical CodeMeta documents.
-
-`CodeMeta.from_legacy_jsonld` is the explicit migration path for legacy input
-that uses prefix-qualified keys (`schema:name`) or pre-v3 property names
-(`creator`, `embargoDate`, `contIntegration`). It applies
-`normalize_jsonld_context` (flattens dict `@context` prefixes, removes the
-dict context, backfills v3) and `migrate_legacy_codemeta` (renames legacy
-keys), then parses as v3 and adapts to `CodeMeta`. This is intentionally lossy:
-the dict `@context` is removed after prefix flattening.
-
-Python uses snake_case names and JSON-LD serialization uses CodeMeta/schema.org
-aliases:
+Parse a CodeMeta document into a validated model and serialize it back to
+JSON-LD:
 
 ```python
 from pydantic_codemeta import CodeMeta
 
-model = CodeMeta(
-    name="Example",
-    code_repository="https://example.org/repository",
-    date_published="2026-08-18",
-)
-assert model.to_jsonld()["codeRepository"] == "https://example.org/repository"
+document = {
+    "@context": "https://w3id.org/codemeta/3.0",
+    "@type": "SoftwareSourceCode",
+    "name": "Example",
+    "codeRepository": "https://example.org/repository",
+}
+
+metadata = CodeMeta.from_jsonld(document)
+
+assert metadata.code_repository == "https://example.org/repository"
+assert metadata.to_jsonld()["codeRepository"] == document["codeRepository"]
 ```
 
-Concrete models use one constrained `@type`; multi-valued `@type` is outside
-the typed-model scope. See `docs/specs/codemeta-pydantic-v2.md` for the full
-context, migration, date, collision, and round-trip contracts.
+Python attributes use snake_case names. `to_jsonld()` emits the corresponding
+CodeMeta and schema.org aliases.
 
-## Common Make Targets
+### Parsing Behavior
+
+- `CodeMeta.from_jsonld()` validates canonical CodeMeta 3.0 without rewriting it.
+- `CodeMeta.from_legacy_jsonld()` explicitly migrates supported legacy forms.
+- Unknown JSON-compatible properties survive parse and serialization round trips.
+
+See the
+[model specification](https://github.com/SciCodes/pydantic-codemeta/blob/main/docs/specs/codemeta-pydantic-v2.md)
+for the complete field, context, migration, date, collision, and round-trip
+contracts.
+
+## Development
+
+Install [uv](https://docs.astral.sh/uv/), then create the development
+environment and run the test suite:
 
 ```bash
-make sync         # install runtime + test + dev dependencies with uv
-make test         # run tests locally
-make clean        # remove build/test artifacts
-make package      # build sdist and wheel into dist/
-make check        # verify distributions with twine
-make publish-test # upload to TestPyPI
-make publish      # upload to PyPI
-make docker-test  # run tests in container via docker compose
-make docker-package # build package artifacts in container
+uv sync --extra test
+uv run python -m pytest -q -s
 ```
 
-## Container Workflow
-
-The container installs dependencies into the project virtual environment and activates it via `PATH=/app/.venv/bin:$PATH`.
-When using Docker Compose with a bind mount, an anonymous volume is mounted at `/app/.venv` so the container environment is not overwritten by host files.
-The Dockerfile uses BuildKit cache mounts for uv, and separates dependency installation from project installation to improve rebuild times.
-
-For reproducible dependency resolution, generate and commit a lockfile:
+Build and validate the distribution artifacts:
 
 ```bash
-uv lock
+uv build
+uv run twine check dist/*
 ```
 
-Build once:
+Docker-based checks are also available:
 
 ```bash
-docker build -t codemeta-pydantic:local .
+make docker-test
+make docker-package
 ```
 
-Run tests in container:
+## Contributing
 
-```bash
-docker compose run --rm test
-```
+Issues and pull requests are welcome in the
+[GitHub repository](https://github.com/SciCodes/pydantic-codemeta). Include
+focused tests for behavioral changes and preserve the contracts documented in
+the model specification.
 
-Build wheel and sdist in container:
+## License
 
-```bash
-docker compose run --rm package
-```
-
-## Publishing Notes
-
-- `make publish-test` uploads to TestPyPI first.
-- `make publish` uploads to PyPI.
-- Configure credentials with environment variables or a `~/.pypirc` profile used by Twine.
+`pydantic-codemeta` is distributed under the
+[MIT License](https://github.com/SciCodes/pydantic-codemeta/blob/main/LICENSE).

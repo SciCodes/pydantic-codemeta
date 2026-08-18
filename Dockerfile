@@ -23,13 +23,13 @@ COPY --chown=${APPUSER}:${APPUSER} pyproject.toml uv.lock README.md LICENSE ./
 
 # Install transitive dependencies first so this layer is reused when only source code changes.
 RUN --mount=type=cache,target=/home/${APPUSER}/.cache/uv,uid=${UID},gid=${GID} \
-    uv sync --locked --extra test --group dev --no-install-project
+    uv sync --locked --extra test --no-install-project
 
 COPY --chown=${APPUSER}:${APPUSER} src ./src
 COPY --chown=${APPUSER}:${APPUSER} tests ./tests
 COPY --chown=${APPUSER}:${APPUSER} docs ./docs
 
 RUN --mount=type=cache,target=/home/${APPUSER}/.cache/uv,uid=${UID},gid=${GID}  \
-    uv sync --locked --extra test --group dev
+    uv sync --locked --extra test
 
 CMD ["uv", "run", "pytest", "-q"]
