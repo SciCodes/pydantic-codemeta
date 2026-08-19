@@ -27,10 +27,23 @@ test = [
 dev = [
     "build>=1.2.2",
     "twine>=6,<7",
+    "ruff>=0.6",
+    "mdformat>=0.7",
+    "mdformat-gfm>=0.3",
+    "mdformat-frontmatter>=2",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "DTZ"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["DTZ001"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

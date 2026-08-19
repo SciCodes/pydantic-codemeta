@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use pydantic-codemeta, please cite it using these metadata."
+title: pydantic-codemeta
+type: software
+authors:
+  - family-names: Lee
+    given-names: Allen
+    email: allen.lee@asu.edu
+    orcid: "https://orcid.org/0000-0002-6523-6079"
+    affiliation: "Arizona State University"
+abstract: >-
+  Pydantic v2 models for parsing, validating, and serializing CodeMeta JSON-LD
+  metadata while preserving unknown JSON-compatible properties.
+version: 0.1.0
+repository-code: "https://github.com/SciCodes/pydantic-codemeta"
+url: "https://github.com/SciCodes/pydantic-codemeta"
+license: MIT
+keywords:
+  - CodeMeta
+  - JSON-LD
+  - metadata
+  - Pydantic
+  - research software
