@@ -30,14 +30,23 @@ class _JsonLikeInt(IntEnum):
     VALUE = 1
 
 
-def test_models_keep_boundaries_and_aliases() -> None:
+def test_codemeta_accepts_python_names_for_jsonld_keywords() -> None:
     model = CodeMetaV3.model_validate(
         {"context": CODEMETA_V3_CONTEXT, "type": "SoftwareSourceCode", "name": "x"}
     )
     assert model.to_jsonld()["@context"] == CODEMETA_V3_CONTEXT
+
+
+def test_codemeta_preserves_non_v3_string_context() -> None:
     assert CodeMeta(context="future", type="SoftwareSourceCode").context == "future"
+
+
+def test_codemeta_v3_requires_v3_context() -> None:
     with pytest.raises(ValidationError):
         CodeMetaV3.model_validate({"@context": "future", "@type": "SoftwareSourceCode"})
+
+
+def test_codemeta_models_require_software_source_code_type() -> None:
     with pytest.raises(ValidationError):
         CodeMetaV3.model_validate({"@context": CODEMETA_V3_CONTEXT, "@type": "SoftwareApplication"})
     with pytest.raises(ValidationError):
@@ -137,7 +146,7 @@ def test_normalization_does_not_treat_jsonld_keywords_as_prefixes() -> None:
     }
 
 
-def test_migration_checks_presence_and_is_shallow() -> None:
+def test_legacy_migration_renames_root_keys_and_preserves_nested_values() -> None:
     nested = {"creator": "keep"}
     data = {"embargoDate": "", "contIntegration": [], "creator": nested}
     result = migrate_legacy_codemeta(data)
@@ -177,7 +186,7 @@ def test_from_jsonld_is_pure_parse_preserves_dict_context() -> None:
     assert model.futureField == {"raw": True}
 
 
-def test_from_jsonld_accepts_v4_string_context() -> None:
+def test_from_jsonld_preserves_non_v3_string_context() -> None:
     """from_jsonld must accept any string context, not just v3."""
 
     model = CodeMeta.from_jsonld(
@@ -383,7 +392,7 @@ def test_from_legacy_jsonld_rejects_non_v3_context() -> None:
         })
 
 
-def test_adapters_preserve_extras_and_reject_non_v3() -> None:
+def test_v3_adapters_preserve_unknown_properties() -> None:
     model = CodeMeta.from_jsonld(
         {
             "@context": CODEMETA_V3_CONTEXT,
@@ -394,8 +403,14 @@ def test_adapters_preserve_extras_and_reject_non_v3() -> None:
     )
     v3 = codemeta_to_codemeta_v3(model)
     assert codemeta_v3_to_codemeta(v3).futureField == {"raw": True}
+
+
+def test_v3_adapter_backfills_missing_or_null_context() -> None:
     assert CodeMeta().context == CODEMETA_V3_CONTEXT
     assert codemeta_to_codemeta_v3(CodeMeta(context=None)).context == CODEMETA_V3_CONTEXT
+
+
+def test_v3_adapter_rejects_non_v3_string_context() -> None:
     with pytest.raises(ValueError):
         codemeta_to_codemeta_v3(CodeMeta(context="future"))
 
@@ -412,7 +427,7 @@ def test_v3_adapter_rejects_structured_contexts(context: object) -> None:
         codemeta_to_codemeta_v3(CodeMeta(context=context))
 
 
-def test_dates_have_precise_tolerant_contract() -> None:
+def test_dates_parse_iso_dates_and_preserve_native_dates_and_other_strings() -> None:
     native = date(2024, 1, 2)
     model = CodeMeta(
         date_created=native,
@@ -429,7 +444,7 @@ def test_dates_have_precise_tolerant_contract() -> None:
 
 
 @pytest.mark.parametrize("value", [123, 1.5, datetime(2024, 1, 2, 3, 4)])
-def test_dates_reject_non_contract_values(value: object) -> None:
+def test_date_fields_reject_numbers_and_datetimes(value: object) -> None:
     with pytest.raises(ValidationError):
         CodeMeta(date_created=value)
 
@@ -551,9 +566,12 @@ def test_singular_vocabulary_fields_reject_lists(field: str, value: object) -> N
         CreativeWork(**{field: value})
 
 
-def test_concrete_types_reject_replacement_and_multivalued_type() -> None:
+def test_concrete_model_rejects_replacement_type() -> None:
     with pytest.raises(ValidationError):
         Person(type="Organization")
+
+
+def test_codemeta_rejects_multivalued_type() -> None:
     with pytest.raises(ValidationError):
         CodeMeta.from_jsonld(
             {"@type": ["SoftwareSourceCode", "FutureSoftwareType"]}

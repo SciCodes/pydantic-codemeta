@@ -63,7 +63,7 @@ def test_unknown_fields_survive_round_trip() -> None:
     assert payload["@type"] == "SoftwareSourceCode"
 
 
-def test_iso_dates_are_accepted() -> None:
+def test_iso_dates_parse_and_serialize() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
     assert isinstance(model.date_created, date)
@@ -114,7 +114,7 @@ def test_review_field_parses() -> None:
     assert model.review.review_aspect == "Documentation"
 
 
-def test_codemeta_specific_fields_preserved() -> None:
+def test_codemeta_specific_fields_parse_from_fixture() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
     assert model.issue_tracker == "https://github.com/example/research-toolkit/issues"

@@ -22,7 +22,7 @@ from pydantic_codemeta import (
 )
 
 
-def test_alias_handling_uses_jsonld_names_on_dump() -> None:
+def test_to_jsonld_emits_context_and_nested_type_aliases() -> None:
     model = CodeMeta(
         context="https://w3id.org/codemeta/3.0",
         name="My Tool",
@@ -80,7 +80,7 @@ def test_property_value_includes_type_alias() -> None:
     assert identifier.to_jsonld()["@type"] == "PropertyValue"
 
 
-def test_invalid_nested_type_raises_validation_error() -> None:
+def test_author_rejects_contact_point_type() -> None:
     with pytest.raises(ValidationError):
         CodeMeta(
             author={
@@ -109,12 +109,7 @@ def test_property_value_rejects_non_json_structured_value() -> None:
         PropertyValue(value={"unexpected": object()})
 
 
-# ---------------------------------------------------------------------------
-# New type tests
-# ---------------------------------------------------------------------------
-
-
-def test_role_parses_and_round_trips() -> None:
+def test_role_serializes_type_fields_and_dates() -> None:
     role = Role(
         roleName="maintainer",
         author=Person(name="Alex Doe"),
@@ -130,7 +125,7 @@ def test_role_parses_and_round_trips() -> None:
     assert payload["startDate"] == "2023-01-01"
 
 
-def test_role_in_author_field() -> None:
+def test_author_parses_role_with_nested_person() -> None:
     model = CodeMeta.from_jsonld(
         {
             "@context": "https://w3id.org/codemeta/3.0",
@@ -154,7 +149,7 @@ def test_role_in_author_field() -> None:
     assert model.author.author.name == "Alex Doe"
 
 
-def test_creative_work_base_type() -> None:
+def test_creative_work_serializes_fixed_type() -> None:
     work = CreativeWork(name="A Paper")
 
     payload = work.to_jsonld()
@@ -163,7 +158,7 @@ def test_creative_work_base_type() -> None:
     assert payload["name"] == "A Paper"
 
 
-def test_scholarly_article_type() -> None:
+def test_scholarly_article_serializes_fixed_type() -> None:
     article = ScholarlyArticle(
         name="Smith et al. 2024. Research Toolkit.",
         url="https://doi.org/10.1000/example-paper",
@@ -342,7 +337,7 @@ def test_software_relations_reject_out_of_range_structured_values(
         SoftwareSourceCode(**{field: value})
 
 
-def test_raw_union_citation_classification() -> None:
+def test_citation_union_classifies_known_and_unknown_creative_work_types() -> None:
     generic = SoftwareSourceCode(
         citation={"@type": "WebApplication", "name": "Web app"}
     )
@@ -356,7 +351,7 @@ def test_raw_union_citation_classification() -> None:
     assert scholarly.to_jsonld()["citation"]["@type"] == "ScholarlyArticle"
 
 
-def test_review_type() -> None:
+def test_review_serializes_fixed_type_and_fields() -> None:
     review = Review(
         reviewBody="Well-documented and reproducible.",
         reviewAspect="Documentation",
@@ -369,7 +364,7 @@ def test_review_type() -> None:
     assert payload["reviewAspect"] == "Documentation"
 
 
-def test_postal_address_type() -> None:
+def test_postal_address_serializes_fixed_type_and_fields() -> None:
     address = PostalAddress(
         streetAddress="123 Main St",
         addressLocality="Anytown",
@@ -385,7 +380,7 @@ def test_postal_address_type() -> None:
     assert payload["addressCountry"] == "US"
 
 
-def test_computer_language_type() -> None:
+def test_computer_language_serializes_fixed_type() -> None:
     lang = ComputerLanguage(name="Python")
 
     payload = lang.to_jsonld()
@@ -495,7 +490,7 @@ def test_software_source_code_supports_review() -> None:
     assert model.review.review_body == "Great software."
 
 
-def test_same_as_field_preserved() -> None:
+def test_same_as_parses_and_serializes() -> None:
     model = CodeMeta.from_jsonld(
         {
             "@context": "https://w3id.org/codemeta/3.0",
@@ -509,7 +504,7 @@ def test_same_as_field_preserved() -> None:
     assert model.to_jsonld()["sameAs"] == "https://example.org/mirror"
 
 
-def test_codemeta_rejects_non_3_0_context() -> None:
+def test_codemeta_v3_rejects_non_v3_context() -> None:
     with pytest.raises(ValidationError):
         CodeMetaV3.from_jsonld(
             {
@@ -520,7 +515,7 @@ def test_codemeta_rejects_non_3_0_context() -> None:
         )
 
 
-def test_software_source_code_accepts_v4_context() -> None:
+def test_software_source_code_preserves_non_v3_string_context() -> None:
     """SoftwareSourceCode is not version-locked and should preserve any context."""
 
     model = SoftwareSourceCode.from_jsonld(
