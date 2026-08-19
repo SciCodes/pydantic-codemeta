@@ -7,7 +7,7 @@ from typing import Literal, TypeAlias
 
 from pydantic import Field, StrictBool, StrictFloat, StrictInt, field_validator
 
-from .base import JsonLdContext, RawJsonObject, Thing
+from .base import JsonLdContext, PropertyValue, RawJsonObject, Thing
 
 
 def _parse_iso_date(value: object) -> date | str | None:
@@ -304,13 +304,15 @@ class SoftwareApplication(CreativeWork):
     )
 
 
-CreativeWork.model_rebuild()
-MediaObject.model_rebuild()
-DataFeed.model_rebuild()
-Review.model_rebuild()
-ScholarlyArticle.model_rebuild()
-SoftwareSourceCode.model_rebuild()
-SoftwareApplication.model_rebuild()
-Role.model_rebuild()
-Person.model_rebuild()
-Organization.model_rebuild()
+_MODEL_TYPES_NAMESPACE = {"PropertyValue": PropertyValue}
+
+CreativeWork.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+MediaObject.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+DataFeed.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+Review.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+ScholarlyArticle.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+SoftwareSourceCode.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+SoftwareApplication.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+Role.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+Person.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
+Organization.model_rebuild(_types_namespace=_MODEL_TYPES_NAMESPACE)
