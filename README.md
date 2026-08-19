@@ -82,6 +82,34 @@ make docker-test
 make docker-package
 ```
 
+## TestPyPI rehearsal
+
+A full TestPyPI rehearsal builds, validates, and uploads the package without
+touching production PyPI. Configure `~/.pypirc` with TestPyPI credentials:
+
+```ini
+[testpypi]
+username = __token__
+password = pypi-<your-testpypi-token>
+```
+
+Then run:
+
+```bash
+make release-test
+```
+
+This runs `clean`, `test`, `package`, `check`, and `publish-test` (uploads to
+TestPyPI). After uploading, verify the package installs from TestPyPI:
+
+```bash
+make smoke-test
+```
+
+Production PyPI releases are published by the GitHub Actions release workflow
+using PyPI Trusted Publishing. Do not use `make publish` for production
+releases.
+
 ## Contributing
 
 Issues and pull requests are welcome in the
