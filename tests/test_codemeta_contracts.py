@@ -48,7 +48,9 @@ def test_codemeta_v3_requires_v3_context() -> None:
 
 def test_codemeta_models_require_software_source_code_type() -> None:
     with pytest.raises(ValidationError):
-        CodeMetaV3.model_validate({"@context": CODEMETA_V3_CONTEXT, "@type": "SoftwareApplication"})
+        CodeMetaV3.model_validate(
+            {"@context": CODEMETA_V3_CONTEXT, "@type": "SoftwareApplication"}
+        )
     with pytest.raises(ValidationError):
         CodeMeta(type="SoftwareApplication")
 
@@ -106,8 +108,13 @@ def test_alias_and_python_name_collisions_are_rejected(
 
 def test_normalization_is_root_only_lossy_and_non_mutating() -> None:
     nested = {"schema:name": "nested"}
-    data = {"@context": {"schema": "https://schema.org/", "ex": "urn:ex"},
-            "schema:name": "x", "ex:version": 1, "unknown:value": 2, "nested": nested}
+    data = {
+        "@context": {"schema": "https://schema.org/", "ex": "urn:ex"},
+        "schema:name": "x",
+        "ex:version": 1,
+        "unknown:value": 2,
+        "nested": nested,
+    }
     result = normalize_jsonld_context(data)
     assert result == {"name": "x", "version": 1, "unknown:value": 2, "nested": nested}
     assert data["@context"]
@@ -150,15 +157,21 @@ def test_legacy_migration_renames_root_keys_and_preserves_nested_values() -> Non
     nested = {"creator": "keep"}
     data = {"embargoDate": "", "contIntegration": [], "creator": nested}
     result = migrate_legacy_codemeta(data)
-    assert result == {"embargoEndDate": "", "continuousIntegration": [], "author": nested}
+    assert result == {
+        "embargoEndDate": "",
+        "continuousIntegration": [],
+        "author": nested,
+    }
     assert data["creator"] is nested
 
 
 @pytest.mark.parametrize(
     ("old", "new"),
-    [("embargoDate", "embargoEndDate"),
-     ("contIntegration", "continuousIntegration"),
-     ("creator", "author")],
+    [
+        ("embargoDate", "embargoEndDate"),
+        ("contIntegration", "continuousIntegration"),
+        ("creator", "author"),
+    ],
 )
 def test_migration_rejects_each_key_presence_collision(old: str, new: str) -> None:
     with pytest.raises(ValueError):
@@ -300,9 +313,7 @@ def test_unknown_properties_inside_known_nodes_remain_raw() -> None:
 )
 def test_unknown_non_json_value_is_rejected(value: object) -> None:
     with pytest.raises(ValidationError):
-        CodeMeta.model_validate(
-            {"@type": "SoftwareSourceCode", "futureObject": value}
-        )
+        CodeMeta.model_validate({"@type": "SoftwareSourceCode", "futureObject": value})
 
 
 @pytest.mark.parametrize(
@@ -316,9 +327,7 @@ def test_unknown_non_json_value_is_rejected(value: object) -> None:
 )
 def test_unknown_non_finite_json_numbers_are_rejected(value: object) -> None:
     with pytest.raises(ValidationError):
-        CodeMeta.model_validate(
-            {"@type": "SoftwareSourceCode", "futureNumber": value}
-        )
+        CodeMeta.model_validate({"@type": "SoftwareSourceCode", "futureNumber": value})
 
 
 def test_context_object_rejects_nested_non_finite_json_numbers() -> None:
@@ -358,25 +367,29 @@ def test_pure_parse_preserves_canonical_and_legacy_names_together() -> None:
 def test_from_legacy_jsonld_normalizes_and_migrates() -> None:
     """from_legacy_jsonld flattens dict context, migrates legacy keys, backfills v3."""
 
-    model = CodeMeta.from_legacy_jsonld({
-        "@context": {"schema": "https://schema.org/"},
-        "@type": "SoftwareSourceCode",
-        "schema:name": "tool",
-        "creator": "author",
-        "futureField": {"raw": True},
-    })
+    model = CodeMeta.from_legacy_jsonld(
+        {
+            "@context": {"schema": "https://schema.org/"},
+            "@type": "SoftwareSourceCode",
+            "schema:name": "tool",
+            "creator": "author",
+            "futureField": {"raw": True},
+        }
+    )
     assert model.name == "tool"
     assert model.author == "author"
     assert "creator" not in (model.model_extra or {})
     assert model.context == CODEMETA_V3_CONTEXT
     assert model.futureField == {"raw": True}
 
-    v3 = CodeMetaV3.from_legacy_jsonld({
-        "@context": {"schema": "https://schema.org/"},
-        "@type": "SoftwareSourceCode",
-        "schema:name": "tool",
-        "creator": "author",
-    })
+    v3 = CodeMetaV3.from_legacy_jsonld(
+        {
+            "@context": {"schema": "https://schema.org/"},
+            "@type": "SoftwareSourceCode",
+            "schema:name": "tool",
+            "creator": "author",
+        }
+    )
     assert type(v3) is CodeMetaV3
     assert v3.context == CODEMETA_V3_CONTEXT
 
@@ -385,11 +398,13 @@ def test_from_legacy_jsonld_rejects_non_v3_context() -> None:
     """from_legacy_jsonld routes through CodeMetaV3, which rejects non-v3 contexts."""
 
     with pytest.raises(ValidationError):
-        CodeMeta.from_legacy_jsonld({
-            "@context": "https://w3id.org/codemeta/4.0",
-            "@type": "SoftwareSourceCode",
-            "name": "Tool",
-        })
+        CodeMeta.from_legacy_jsonld(
+            {
+                "@context": "https://w3id.org/codemeta/4.0",
+                "@type": "SoftwareSourceCode",
+                "name": "Tool",
+            }
+        )
 
 
 def test_v3_adapters_preserve_unknown_properties() -> None:
@@ -407,7 +422,9 @@ def test_v3_adapters_preserve_unknown_properties() -> None:
 
 def test_v3_adapter_backfills_missing_or_null_context() -> None:
     assert CodeMeta().context == CODEMETA_V3_CONTEXT
-    assert codemeta_to_codemeta_v3(CodeMeta(context=None)).context == CODEMETA_V3_CONTEXT
+    assert (
+        codemeta_to_codemeta_v3(CodeMeta(context=None)).context == CODEMETA_V3_CONTEXT
+    )
 
 
 def test_v3_adapter_rejects_non_v3_string_context() -> None:
@@ -573,9 +590,7 @@ def test_concrete_model_rejects_replacement_type() -> None:
 
 def test_codemeta_rejects_multivalued_type() -> None:
     with pytest.raises(ValidationError):
-        CodeMeta.from_jsonld(
-            {"@type": ["SoftwareSourceCode", "FutureSoftwareType"]}
-        )
+        CodeMeta.from_jsonld({"@type": ["SoftwareSourceCode", "FutureSoftwareType"]})
 
 
 def test_model_round_trip_equivalence_includes_context_id_and_unknowns() -> None:

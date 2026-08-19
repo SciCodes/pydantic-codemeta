@@ -15,7 +15,6 @@ from pydantic_codemeta import (
     ScholarlyArticle,
 )
 
-
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -118,8 +117,14 @@ def test_codemeta_specific_fields_parse_from_fixture() -> None:
     model = CodeMeta.from_jsonld(load_fixture("full_codemeta.json"))
 
     assert model.issue_tracker == "https://github.com/example/research-toolkit/issues"
-    assert model.readme == "https://github.com/example/research-toolkit/blob/main/README.md"
-    assert model.build_instructions == "https://github.com/example/research-toolkit#building"
+    assert (
+        model.readme
+        == "https://github.com/example/research-toolkit/blob/main/README.md"
+    )
+    assert (
+        model.build_instructions
+        == "https://github.com/example/research-toolkit#building"
+    )
     assert model.development_status == "active"
 
 

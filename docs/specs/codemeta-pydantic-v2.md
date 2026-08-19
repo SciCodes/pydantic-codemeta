@@ -21,14 +21,14 @@ serializer, extra-property handling, or basic class hierarchy.
 
 The following external sources define facts used by this specification:
 
-* [CodeMeta 3.0 terms](https://w3id.org/codemeta/3.0) define the current
+- [CodeMeta 3.0 terms](https://w3id.org/codemeta/3.0) define the current
   property names and value ranges.
-* [The schema.org data model](https://schema.org/docs/datamodel.html) states
+- [The schema.org data model](https://schema.org/docs/datamodel.html) states
   that properties may have multiple values and that JSON-LD represents those
   values as arrays.
-* [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/) defines the permitted
+- [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/) defines the permitted
   `@context` shapes and JSON-LD keywords.
-* [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259) defines JSON values and
+- [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259) defines JSON values and
   excludes `NaN` and infinity from JSON numbers.
 
 CodeMeta and schema.org define vocabulary semantics. This document separately
@@ -42,23 +42,23 @@ No requirement in this document predicts CodeMeta v4 terms.
 
 The package must provide:
 
-* typed models for the inventory in this document;
-* Pydantic v2 validation;
-* JSON-LD parsing and serialization;
-* Python field names and JSON-LD aliases;
-* typed nested objects for known terms;
-* recursive preservation of unknown JSON-compatible values;
-* explicit normalization and legacy migration helpers; and
-* semantic round trips through parse, serialize, and reparse.
+- typed models for the inventory in this document;
+- Pydantic v2 validation;
+- JSON-LD parsing and serialization;
+- Python field names and JSON-LD aliases;
+- typed nested objects for known terms;
+- recursive preservation of unknown JSON-compatible values;
+- explicit normalization and legacy migration helpers; and
+- semantic round trips through parse, serialize, and reparse.
 
 The package does not provide:
 
-* complete schema.org coverage;
-* general RDF processing or reasoning;
-* remote context loading;
-* dynamic model generation from `@type` or `@context`;
-* automatic vocabulary-version migration during parsing; or
-* lexical or byte-for-byte JSON preservation.
+- complete schema.org coverage;
+- general RDF processing or reasoning;
+- remote context loading;
+- dynamic model generation from `@type` or `@context`;
+- automatic vocabulary-version migration during parsing; or
+- lexical or byte-for-byte JSON preservation.
 
 ## Architecture
 
@@ -98,24 +98,24 @@ version's typed inventory.
 
 The public model inventory is:
 
-* `SchemaOrgBase`
-* `Thing`
-* `PropertyValue`
-* `ContactPoint`
-* `PostalAddress`
-* `Organization`
-* `Person`
-* `Role`
-* `ComputerLanguage`
-* `CreativeWork`
-* `MediaObject`
-* `DataFeed`
-* `Review`
-* `ScholarlyArticle`
-* `SoftwareSourceCode`
-* `SoftwareApplication`
-* `CodeMeta`
-* `CodeMetaV3`
+- `SchemaOrgBase`
+- `Thing`
+- `PropertyValue`
+- `ContactPoint`
+- `PostalAddress`
+- `Organization`
+- `Person`
+- `Role`
+- `ComputerLanguage`
+- `CreativeWork`
+- `MediaObject`
+- `DataFeed`
+- `Review`
+- `ScholarlyArticle`
+- `SoftwareSourceCode`
+- `SoftwareApplication`
+- `CodeMeta`
+- `CodeMetaV3`
 
 `VersionedLanguage` is not a CodeMeta or schema.org type and must not be part
 of this inventory. An unfamiliar property such as `version` on a
@@ -136,26 +136,26 @@ Such a field must still round-trip as an extra.
 Adding another first-class field changes the typed API and requires a
 specification update.
 
-| Model | Fields introduced by that model |
-| --- | --- |
-| `SchemaOrgBase` | `@id`, `@type` |
-| `Thing` | `name`, `description`, `url`, `identifier`, `relatedLink`, `sameAs` |
-| `PropertyValue` | `value`, `propertyID` |
-| `ContactPoint` | `contactType`, `email` |
-| `PostalAddress` | `streetAddress`, `addressLocality`, `addressRegion`, `postalCode`, `addressCountry` |
-| `Organization` | `email`, `contactPoint`, `address` |
-| `Person` | `email`, `givenName`, `familyName`, `affiliation`, `contactPoint`, `address` |
-| `Role` | `roleName`, `startDate`, `endDate`, `author` |
-| `ComputerLanguage` | no fields beyond `Thing` |
-| `CreativeWork` | `author`, `contributor`, `editor`, `publisher`, `copyrightHolder`, `copyrightYear`, `funder`, `sponsor`, `provider`, `producer`, `license`, `citation`, `review`, `isPartOf`, `hasPart`, `encoding`, `keywords`, `position`, `dateCreated`, `dateModified`, `datePublished` |
-| `MediaObject` | `contentUrl`, `encodingFormat`, `contentSize` |
-| `DataFeed` | `dataFeedElement` |
-| `Review` | `reviewBody`, `reviewAspect` |
-| `ScholarlyArticle` | no fields beyond `CreativeWork` |
-| `SoftwareSourceCode` | `@context`, `codeRepository`, `programmingLanguage`, `runtimePlatform`, `targetProduct`, `applicationCategory`, `applicationSubCategory`, `downloadUrl`, `fileSize`, `installUrl`, `memoryRequirements`, `operatingSystem`, `permissions`, `processorRequirements`, `releaseNotes`, `softwareHelp`, `softwareRequirements`, `softwareVersion`, `storageRequirements`, `fileFormat`, `isAccessibleForFree`, `version`, `supportingData`, `maintainer`, `buildInstructions`, `continuousIntegration`, `developmentStatus`, `embargoEndDate`, `funding`, `hasSourceCode`, `isSourceCodeOf`, `issueTracker`, `readme`, `referencePublication`, `softwareSuggestions` |
-| `SoftwareApplication` | `applicationCategory`, `applicationSubCategory`, `operatingSystem`, `softwareVersion`, `downloadUrl`, `installUrl`, `memoryRequirements`, `processorRequirements`, `storageRequirements`, `permissions`, `supportingData` |
-| `CodeMeta` | no new vocabulary fields; supplies the open context default |
-| `CodeMetaV3` | no new vocabulary fields; constrains the context to CodeMeta 3.0 |
+| Model                 | Fields introduced by that model                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SchemaOrgBase`       | `@id`, `@type`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `Thing`               | `name`, `description`, `url`, `identifier`, `relatedLink`, `sameAs`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `PropertyValue`       | `value`, `propertyID`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `ContactPoint`        | `contactType`, `email`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `PostalAddress`       | `streetAddress`, `addressLocality`, `addressRegion`, `postalCode`, `addressCountry`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Organization`        | `email`, `contactPoint`, `address`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `Person`              | `email`, `givenName`, `familyName`, `affiliation`, `contactPoint`, `address`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `Role`                | `roleName`, `startDate`, `endDate`, `author`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `ComputerLanguage`    | no fields beyond `Thing`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `CreativeWork`        | `author`, `contributor`, `editor`, `publisher`, `copyrightHolder`, `copyrightYear`, `funder`, `sponsor`, `provider`, `producer`, `license`, `citation`, `review`, `isPartOf`, `hasPart`, `encoding`, `keywords`, `position`, `dateCreated`, `dateModified`, `datePublished`                                                                                                                                                                                                                                                                                                                                                                                      |
+| `MediaObject`         | `contentUrl`, `encodingFormat`, `contentSize`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `DataFeed`            | `dataFeedElement`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `Review`              | `reviewBody`, `reviewAspect`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `ScholarlyArticle`    | no fields beyond `CreativeWork`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `SoftwareSourceCode`  | `@context`, `codeRepository`, `programmingLanguage`, `runtimePlatform`, `targetProduct`, `applicationCategory`, `applicationSubCategory`, `downloadUrl`, `fileSize`, `installUrl`, `memoryRequirements`, `operatingSystem`, `permissions`, `processorRequirements`, `releaseNotes`, `softwareHelp`, `softwareRequirements`, `softwareVersion`, `storageRequirements`, `fileFormat`, `isAccessibleForFree`, `version`, `supportingData`, `maintainer`, `buildInstructions`, `continuousIntegration`, `developmentStatus`, `embargoEndDate`, `funding`, `hasSourceCode`, `isSourceCodeOf`, `issueTracker`, `readme`, `referencePublication`, `softwareSuggestions` |
+| `SoftwareApplication` | `applicationCategory`, `applicationSubCategory`, `operatingSystem`, `softwareVersion`, `downloadUrl`, `installUrl`, `memoryRequirements`, `processorRequirements`, `storageRequirements`, `permissions`, `supportingData`                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `CodeMeta`            | no new vocabulary fields; supplies the open context default                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `CodeMetaV3`          | no new vocabulary fields; constrains the context to CodeMeta 3.0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 Every listed field must have an explicit type. `Any` is not permitted for a
 known field. Its scalar value types must follow the CodeMeta 3.0 range or the
@@ -171,16 +171,16 @@ precedence over a narrower first-pass implementation.
 
 The following names are not typed fields:
 
-* `creator`
-* `contIntegration`
-* `embargoDate`
+- `creator`
+- `contIntegration`
+- `embargoDate`
 
 `from_jsonld()` preserves them as extras. Explicit legacy migration renames
 them as follows:
 
-* `creator` to `author`
-* `contIntegration` to `continuousIntegration`
-* `embargoDate` to `embargoEndDate`
+- `creator` to `author`
+- `contIntegration` to `continuousIntegration`
+- `embargoDate` to `embargoEndDate`
 
 The canonical and legacy names may coexist during ordinary parsing. Migration
 must reject an input containing both names in one pair.
@@ -236,13 +236,13 @@ JSONValue =
 
 Validation applies at every nesting depth. Therefore:
 
-* `NaN`, positive infinity, and negative infinity are rejected;
-* tuples are not converted to arrays and are rejected;
-* sets are rejected;
-* `datetime.date` and `datetime.datetime` are rejected as unknown values;
-* arbitrary Python objects are rejected;
-* arbitrary Pydantic models are rejected; and
-* a dictionary with any non-string key is rejected.
+- `NaN`, positive infinity, and negative infinity are rejected;
+- tuples are not converted to arrays and are rejected;
+- sets are rejected;
+- `datetime.date` and `datetime.datetime` are rejected as unknown values;
+- arbitrary Python objects are rejected;
+- arbitrary Pydantic models are rejected; and
+- a dictionary with any non-string key is rejected.
 
 Known fields still perform their documented type validation and conversion.
 These raw-value rules apply only to unknown properties and raw context-object
@@ -259,8 +259,9 @@ an unknown object's `@type`.
 The package uses these conceptual types:
 
 ```python
-JSONValue = None | bool | int | finite_float | str \
-    | list[JSONValue] | dict[str, JSONValue]
+JSONValue = (
+    None | bool | int | finite_float | str | list[JSONValue] | dict[str, JSONValue]
+)
 ContextObject = dict[str, JSONValue]
 ContextEntry = str | ContextObject | None
 Context = ContextEntry | list[ContextEntry]
@@ -280,10 +281,10 @@ fully validate context term definitions.
 
 For `CodeMeta`:
 
-* an omitted `@context` uses `https://w3id.org/codemeta/3.0`;
-* an explicitly supplied `@context: null` remains null and serializes as
+- an omitted `@context` uses `https://w3id.org/codemeta/3.0`;
+- an explicitly supplied `@context: null` remains null and serializes as
   `"@context": null`; and
-* another structurally valid context is preserved without an implicit upgrade
+- another structurally valid context is preserved without an implicit upgrade
   or downgrade.
 
 `CodeMetaV3` accepts only the literal CodeMeta 3.0 context. Converting an open
@@ -363,21 +364,21 @@ list input remains a list.
 Agent = Person | Organization | Role | str
 ```
 
-| Field | Scalar form | Repeated form |
-| --- | --- | --- |
-| `programmingLanguage` | `ComputerLanguage | str` | `list[ComputerLanguage | str]` |
-| `license` | `CreativeWork | str` | `list[CreativeWork | str]` |
-| `identifier` | `PropertyValue | str` | `list[PropertyValue | str]` |
-| `citation` | `CreativeWork | str` | `list[CreativeWork | str]` |
-| `author` | `Agent` | `list[Agent]` |
-| `contributor` | `Agent` | `list[Agent]` |
-| `maintainer` | `Agent` | `list[Agent]` |
+| Field                 | Scalar form        | Repeated form |
+| --------------------- | ------------------ | ------------- |
+| `programmingLanguage` | \`ComputerLanguage | str\`         |
+| `license`             | \`CreativeWork     | str\`         |
+| `identifier`          | \`PropertyValue    | str\`         |
+| `citation`            | \`CreativeWork     | str\`         |
+| `author`              | `Agent`            | `list[Agent]` |
+| `contributor`         | `Agent`            | `list[Agent]` |
+| `maintainer`          | `Agent`            | `list[Agent]` |
 
 The external vocabulary ranges are narrower in two relevant ways:
 
-* CodeMeta lists `Organization | Person` for `author` and `contributor`, and
+- CodeMeta lists `Organization | Person` for `author` and `contributor`, and
   `Person` for `maintainer`.
-* CodeMeta uses `CreativeWork | URL` for `license` and `citation`,
+- CodeMeta uses `CreativeWork | URL` for `license` and `citation`,
   `ComputerLanguage | Text` for `programmingLanguage`, and
   `PropertyValue | URL` for `identifier`.
 
@@ -393,11 +394,11 @@ preserves input array order but does not add `@list` automatically.
 
 Known date fields accept `datetime.date` or `str`.
 
-* A valid ISO date string is converted to `datetime.date`.
-* A non-date string is retained as `str`.
-* An ISO datetime string remains a string; it is not truncated to a date.
-* A native `datetime.datetime` is rejected.
-* Other input types are rejected.
+- A valid ISO date string is converted to `datetime.date`.
+- A non-date string is retained as `str`.
+- An ISO datetime string remains a string; it is not truncated to a date.
+- A native `datetime.datetime` is rejected.
+- Other input types are rejected.
 
 Serialization emits a parsed `datetime.date` as an ISO date string. This
 conversion is intentional and does not require lexical round-trip identity.
@@ -409,11 +410,11 @@ conversion is intentional and does not require lexical round-trip identity.
 `from_jsonld()` validates the input without changing property names or
 context. It must not:
 
-* normalize a context;
-* flatten prefixed keys;
-* rename legacy properties;
-* add a migration; or
-* upgrade or downgrade a vocabulary version.
+- normalize a context;
+- flatten prefixed keys;
+- rename legacy properties;
+- add a migration; or
+- upgrade or downgrade a vocabulary version.
 
 Known fields become typed values. Unknown fields remain raw JSON values.
 
@@ -428,14 +429,14 @@ changing the context or any property name. For a context object:
 
 1. Each non-keyword context key is treated as a configured prefix. A keyword
    starts with `@` and is not a prefix.
-2. For each root property named `prefix:localName`, if `prefix` is configured,
+1. For each root property named `prefix:localName`, if `prefix` is configured,
    the helper renames that property to `localName`.
-3. If `localName` is already present at the root, the helper raises an error.
+1. If `localName` is already present at the root, the helper raises an error.
    Collision checks use key presence, not values.
-4. Root properties with an unconfigured prefix remain unchanged.
-5. The helper removes the context object after processing, even when no root
+1. Root properties with an unconfigured prefix remain unchanged.
+1. The helper removes the context object after processing, even when no root
    property used a configured prefix.
-6. The helper does not inspect or change nested objects.
+1. The helper does not inspect or change nested objects.
 
 This operation is intentionally lossy and is outside the ordinary round-trip
 guarantee.
@@ -462,11 +463,11 @@ and JSON-compatible values.
 
 Null handling is:
 
-* a declared optional field whose value is `None` is omitted, whether it was
+- a declared optional field whose value is `None` is omitted, whether it was
   absent or explicitly supplied as `None`;
-* an unknown extra whose value is null remains present, at every nesting
+- an unknown extra whose value is null remains present, at every nesting
   depth; and
-* an explicitly supplied `@context: null` remains present.
+- an explicitly supplied `@context: null` remains present.
 
 `@context` is the only declared optional field for which explicit null
 presence affects serialization. The implementation need not track input
@@ -506,14 +507,14 @@ assert reparsed.model_dump(mode="python") == parsed.model_dump(mode="python")
 
 This invariant applies to:
 
-* known typed fields;
-* unknown scalars, arrays, objects, and nulls;
-* unknown values nested inside known models;
-* context strings, objects, arrays, null entries, and explicit null context;
-* `@type` and `@id`;
-* unfamiliar `CreativeWork` subtype names;
-* dates after documented conversion; and
-* both scalar and repeated forms in the normative mapping table.
+- known typed fields;
+- unknown scalars, arrays, objects, and nulls;
+- unknown values nested inside known models;
+- context strings, objects, arrays, null entries, and explicit null context;
+- `@type` and `@id`;
+- unfamiliar `CreativeWork` subtype names;
+- dates after documented conversion; and
+- both scalar and repeated forms in the normative mapping table.
 
 The invariant compares model meaning, not source text. Object key order,
 whitespace, numeric spelling, and the lexical form of a parsed date need not
@@ -526,10 +527,10 @@ documented losses must remain isolated to the requested transform.
 
 Future CodeMeta support should normally require only:
 
-* adding or changing typed fields after updating this inventory;
-* adding a version-specific binding when a context constraint is useful;
-* adding tests; and
-* adding migration code only for an authoritative, required migration.
+- adding or changing typed fields after updating this inventory;
+- adding a version-specific binding when a context constraint is useful;
+- adding tests; and
+- adding migration code only for an authoritative, required migration.
 
 Future support must not require a new parser, a closed extra-property policy,
 or a replacement class hierarchy. A future context and future property must
@@ -540,37 +541,37 @@ typed support for them.
 
 Tests must cover:
 
-* Python-name and alias construction;
-* presence-based alias collisions, including equal and null values;
-* correct fixed `@type` values;
-* `@id` preservation;
-* context strings, objects, arrays, null entries, and explicit null;
-* future context preservation by `CodeMeta`;
-* v3 context enforcement by `CodeMetaV3`;
-* unknown scalar, array, object, prefixed, keyword, nested, and null values;
-* rejection of every non-JSON raw-value category listed in this document;
-* canonical and legacy property coexistence during ordinary parsing;
-* explicit legacy migration and collision rejection;
-* intentionally lossy context normalization;
-* the `CreativeWork` fallback and known-incompatible rejection;
-* each scalar and repeated form in the normative mapping table;
-* valid dates, malformed strings, datetime strings, and invalid date inputs;
-* open-to-v3 and v3-to-open conversion; and
-* the second-parse round-trip invariant.
+- Python-name and alias construction;
+- presence-based alias collisions, including equal and null values;
+- correct fixed `@type` values;
+- `@id` preservation;
+- context strings, objects, arrays, null entries, and explicit null;
+- future context preservation by `CodeMeta`;
+- v3 context enforcement by `CodeMetaV3`;
+- unknown scalar, array, object, prefixed, keyword, nested, and null values;
+- rejection of every non-JSON raw-value category listed in this document;
+- canonical and legacy property coexistence during ordinary parsing;
+- explicit legacy migration and collision rejection;
+- intentionally lossy context normalization;
+- the `CreativeWork` fallback and known-incompatible rejection;
+- each scalar and repeated form in the normative mapping table;
+- valid dates, malformed strings, datetime strings, and invalid date inputs;
+- open-to-v3 and v3-to-open conversion; and
+- the second-parse round-trip invariant.
 
 ## Acceptance Criteria
 
 The model layer conforms to this specification when:
 
 1. Every model and typed field in the required inventory exists.
-2. Known fields use explicit types and JSON-LD aliases.
-3. Unknown JSON-compatible values survive recursively without inference.
-4. Non-JSON unknown values are rejected without coercion.
-5. `from_jsonld()` performs validation without normalization or migration.
-6. Explicit transforms have only their documented effects and losses.
-7. Context, type, identifier, alias, date, null, fallback, and cardinality
+1. Known fields use explicit types and JSON-LD aliases.
+1. Unknown JSON-compatible values survive recursively without inference.
+1. Non-JSON unknown values are rejected without coercion.
+1. `from_jsonld()` performs validation without normalization or migration.
+1. Explicit transforms have only their documented effects and losses.
+1. Context, type, identifier, alias, date, null, fallback, and cardinality
    behavior match this document.
-8. Parse, serialize, and reparse produce equivalent model state.
-9. Automated tests enforce these requirements.
-10. The open model can preserve future contexts and properties without
-    knowing a future vocabulary.
+1. Parse, serialize, and reparse produce equivalent model state.
+1. Automated tests enforce these requirements.
+1. The open model can preserve future contexts and properties without
+   knowing a future vocabulary.

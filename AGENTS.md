@@ -31,10 +31,10 @@ spec.
 ## Workflow
 
 1. Identify the affected normative requirement and model field.
-2. Make the smallest implementation change that satisfies it.
-3. Add focused tests, including a second-parse round-trip assertion where
+1. Make the smallest implementation change that satisfies it.
+1. Add focused tests, including a second-parse round-trip assertion where
    serialization is involved.
-4. Run the full suite and package checks.
+1. Run the full suite and package checks.
 
 ```bash
 uv sync --extra test

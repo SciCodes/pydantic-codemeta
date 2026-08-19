@@ -11,16 +11,16 @@
     "familyName": "Lee",
     "email": "allen.lee@asu.edu",
     "affiliation": [
-        {
-            "@type": "Organization",
-            "@id": "https://ror.org/03efmqc40",
-            "name": "Arizona State University"
-        },
-        {
-            "@type": "Organization",
-            "@id": "https://ror.org/01p0n4966",
-            "name": "Open Modeling Foundation"
-        }
+      {
+        "@type": "Organization",
+        "@id": "https://ror.org/03efmqc40",
+        "name": "Arizona State University"
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://ror.org/01p0n4966",
+        "name": "Open Modeling Foundation"
+      }
     ]
   },
   "maintainer": {

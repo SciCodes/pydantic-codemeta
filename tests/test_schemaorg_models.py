@@ -257,9 +257,7 @@ def test_known_non_creative_work_in_list_is_rejected(field: str) -> None:
 
 
 def test_unknown_creative_work_subtype_remains_generic_in_citation() -> None:
-    model = SoftwareSourceCode(
-        citation={"@type": "WebApplication", "name": "Web app"}
-    )
+    model = SoftwareSourceCode(citation={"@type": "WebApplication", "name": "Web app"})
 
     assert type(model.citation) is CreativeWork
     assert model.to_jsonld()["citation"]["@type"] == "WebApplication"
@@ -417,7 +415,9 @@ def test_software_application_does_not_inherit_software_source_code_fields() -> 
     assert "programmingLanguage" not in payload
 
 
-def test_software_source_code_supports_computer_language_in_programming_language() -> None:
+def test_software_source_code_supports_computer_language_in_programming_language() -> (
+    None
+):
     model = CodeMeta.from_jsonld(
         {
             "@context": "https://w3id.org/codemeta/3.0",

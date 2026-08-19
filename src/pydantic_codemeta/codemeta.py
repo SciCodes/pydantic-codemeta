@@ -26,9 +26,7 @@ class CodeMeta(SoftwareSourceCode):
     """
 
     context: JsonLdContext = Field(CODEMETA_V3_CONTEXT, alias="@context")
-    type: Literal["SoftwareSourceCode"] = Field(
-        "SoftwareSourceCode", alias="@type"
-    )
+    type: Literal["SoftwareSourceCode"] = Field("SoftwareSourceCode", alias="@type")
 
     @classmethod
     def from_legacy_jsonld(cls, data: dict[str, object]) -> CodeMeta:
@@ -56,9 +54,7 @@ class CodeMetaV3(CodeMeta):
     raw JSON extras remain open. Direct validation performs no transforms.
     """
 
-    context: Literal[CODEMETA_V3_CONTEXT] = Field(
-        CODEMETA_V3_CONTEXT, alias="@context"
-    )
+    context: Literal[CODEMETA_V3_CONTEXT] = Field(CODEMETA_V3_CONTEXT, alias="@context")
 
     @classmethod
     def from_legacy_jsonld(cls, data: dict[str, object]) -> CodeMetaV3:

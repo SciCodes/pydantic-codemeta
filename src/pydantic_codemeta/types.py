@@ -7,7 +7,7 @@ from typing import Literal, TypeAlias
 
 from pydantic import Field, StrictBool, StrictFloat, StrictInt, field_validator
 
-from .base import JsonLdContext, PropertyValue, RawJsonObject, Thing
+from .base import JsonLdContext, RawJsonObject, Thing
 
 
 def _parse_iso_date(value: object) -> date | str | None:
@@ -176,9 +176,9 @@ class DataFeed(CreativeWork):
     """A schema.org data feed used by ``supportingData``."""
 
     type: Literal["DataFeed"] = Field("DataFeed", alias="@type")
-    data_feed_element: (
-        str | RawJsonObject | list[str | RawJsonObject] | None
-    ) = Field(None, alias="dataFeedElement")
+    data_feed_element: str | RawJsonObject | list[str | RawJsonObject] | None = Field(
+        None, alias="dataFeedElement"
+    )
 
 
 class Review(CreativeWork):
@@ -199,9 +199,7 @@ class SoftwareSourceCode(CreativeWork):
     """Stable, version-neutral SoftwareSourceCode information model."""
 
     context: JsonLdContext = Field(None, alias="@context")
-    type: Literal["SoftwareSourceCode"] = Field(
-        "SoftwareSourceCode", alias="@type"
-    )
+    type: Literal["SoftwareSourceCode"] = Field("SoftwareSourceCode", alias="@type")
     code_repository: str | None = Field(None, alias="codeRepository")
     programming_language: (
         ComputerLanguage | str | list[ComputerLanguage | str] | None
@@ -239,15 +237,9 @@ class SoftwareSourceCode(CreativeWork):
         None, alias="storageRequirements"
     )
     file_format: str | list[str] | None = Field(None, alias="fileFormat")
-    is_accessible_for_free: StrictBool | None = Field(
-        None, alias="isAccessibleForFree"
-    )
+    is_accessible_for_free: StrictBool | None = Field(None, alias="isAccessibleForFree")
     version: (
-        StrictInt
-        | StrictFloat
-        | str
-        | list[StrictInt | StrictFloat | str]
-        | None
+        StrictInt | StrictFloat | str | list[StrictInt | StrictFloat | str] | None
     ) = None
     supporting_data: DataFeed | list[DataFeed] | None = Field(
         None, alias="supportingData"
@@ -255,9 +247,7 @@ class SoftwareSourceCode(CreativeWork):
 
     # CodeMeta-specific vocabulary terms.
     maintainer: AgentField | None = None
-    build_instructions: str | list[str] | None = Field(
-        None, alias="buildInstructions"
-    )
+    build_instructions: str | list[str] | None = Field(None, alias="buildInstructions")
     continuous_integration: str | list[str] | None = Field(
         None, alias="continuousIntegration"
     )
@@ -288,9 +278,7 @@ class SoftwareSourceCode(CreativeWork):
 class SoftwareApplication(CreativeWork):
     """A schema.org SoftwareApplication model."""
 
-    type: Literal["SoftwareApplication"] = Field(
-        "SoftwareApplication", alias="@type"
-    )
+    type: Literal["SoftwareApplication"] = Field("SoftwareApplication", alias="@type")
     application_category: str | list[str] | None = Field(
         None, alias="applicationCategory"
     )

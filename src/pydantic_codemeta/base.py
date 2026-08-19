@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from math import isfinite
-from typing import Annotated, Literal, TypeAlias, cast
+from typing import Annotated, Literal, Self, TypeAlias, cast
 
 from pydantic import (
     BaseModel,
@@ -17,7 +17,6 @@ from pydantic import (
     StrictInt,
     model_validator,
 )
-from typing_extensions import Self
 
 
 def _check_raw_json_value(value: object, path: str) -> None:
@@ -134,9 +133,7 @@ def _prune_declared_none(value: object, serialized: object) -> object:
                 if not preserve_null_context:
                     serialized.pop(alias, None)
             elif alias in serialized:
-                serialized[alias] = _prune_declared_none(
-                    field_value, serialized[alias]
-                )
+                serialized[alias] = _prune_declared_none(field_value, serialized[alias])
         return serialized
     if isinstance(value, list) and isinstance(serialized, list):
         return [
@@ -162,7 +159,5 @@ class PropertyValue(Thing):
     """A schema.org structured property value."""
 
     type: Literal["PropertyValue"] = Field("PropertyValue", alias="@type")
-    value: (
-        StrictBool | str | StrictInt | StrictFloat | RawJsonObject | None
-    ) = None
+    value: StrictBool | str | StrictInt | StrictFloat | RawJsonObject | None = None
     property_id: str | None = Field(None, alias="propertyID")
