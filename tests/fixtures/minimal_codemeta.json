@@ -1,0 +1,14 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "My Tool",
+  "version": "1.0.0",
+  "author": {
+    "@type": "Person",
+    "name": "Jane Smith",
+    "email": "jane@example.com"
+  },
+  "license": "https://spdx.org/licenses/MIT.html",
+  "codeRepository": "https://github.com/example/my-tool",
+  "datePublished": "2024-03-15"
+}

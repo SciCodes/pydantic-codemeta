@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pydantic-codemeta"
+version = "0.1.0"
+description = "CodeMeta-focused schema.org models built with Pydantic v2"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Allen Lee", email = "allen.lee@asu.edu" },
+]
+dependencies = [
+    "pydantic>=2,<3",
+    "typing-extensions>=4.7",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8,<9",
+]
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2",
+    "twine>=6,<7",
+    "ruff>=0.6",
+    "mdformat>=0.7",
+    "mdformat-gfm>=0.3",
+    "mdformat-frontmatter>=2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "DTZ"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["DTZ001"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,102 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "@id": "https://doi.org/10.1234/example",
+  "name": "Research Toolkit",
+  "description": "A complete CodeMeta example.",
+  "url": "https://example.org/toolkit",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "DOI",
+    "propertyID": "doi",
+    "value": "10.1234/example"
+  },
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Example Lab"
+      }
+    },
+    {
+      "@type": "Organization",
+      "name": "COMSES Net",
+      "email": "info@example.org",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "support",
+        "email": "support@example.org",
+        "url": "https://example.org/support"
+      }
+    },
+    {
+      "@type": "Role",
+      "roleName": "maintainer",
+      "author": {
+        "@type": "Person",
+        "name": "Alex Doe"
+      },
+      "startDate": "2023-01-01",
+      "endDate": "2024-06-01"
+    }
+  ],
+  "contributor": {
+    "@type": "Person",
+    "name": "Alex Doe"
+  },
+  "maintainer": "maintainers@example.org",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Example Lab"
+  },
+  "funder": {
+    "@type": "Organization",
+    "name": "National Science Foundation"
+  },
+  "keywords": [
+    "simulation",
+    "codemeta"
+  ],
+  "license": "https://spdx.org/licenses/MIT.html",
+  "citation": {
+    "@type": "ScholarlyArticle",
+    "name": "Smith et al. 2024. Research Toolkit.",
+    "url": "https://doi.org/10.1000/example-paper"
+  },
+  "review": {
+    "@type": "Review",
+    "reviewBody": "Well-documented and reproducible.",
+    "reviewAspect": "Documentation"
+  },
+  "codeRepository": "https://github.com/example/research-toolkit",
+  "programmingLanguage": [
+    {
+      "@type": "ComputerLanguage",
+      "name": "Python"
+    },
+    "R"
+  ],
+  "softwareRequirements": "Python >= 3.10",
+  "runtimePlatform": "Python 3",
+  "operatingSystem": "Linux",
+  "downloadUrl": "https://example.org/toolkit/download",
+  "installUrl": "https://example.org/toolkit/install",
+  "relatedLink": "https://example.org/toolkit/docs",
+  "sameAs": "https://example.org/toolkit/mirror",
+  "version": "2.4.1",
+  "dateCreated": "2024-01-10",
+  "dateModified": "2024-05-20",
+  "datePublished": "2024-06-01",
+  "referencePublication": {
+    "@type": "ScholarlyArticle",
+    "name": "Smith et al. 2024. Research Toolkit.",
+    "url": "https://doi.org/10.1000/example-paper"
+  },
+  "issueTracker": "https://github.com/example/research-toolkit/issues",
+  "readme": "https://github.com/example/research-toolkit/blob/main/README.md",
+  "buildInstructions": "https://github.com/example/research-toolkit#building",
+  "developmentStatus": "active"
+}
