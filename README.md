@@ -64,7 +64,7 @@ Install [uv](https://docs.astral.sh/uv/), then create the development
 environment and run the test suite:
 
 ```bash
-uv sync --extra test
+uv sync
 uv run python -m pytest -q -s
 ```
 
@@ -112,10 +112,10 @@ releases.
 
 ## Contributing
 
-Issues and pull requests are welcome in the
-[GitHub repository](https://github.com/SciCodes/pydantic-codemeta). Include
-focused tests for behavioral changes and preserve the contracts documented in
-the model specification.
+Contributions are welcome. See
+[CONTRIBUTING.md](https://github.com/SciCodes/pydantic-codemeta/blob/main/CONTRIBUTING.md)
+for development setup, testing, formatting, pull request guidelines, and the
+release process.
 
 ## License
 
