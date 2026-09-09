@@ -572,17 +572,13 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 
-[package.optional-dependencies]
-test = [
-    { name = "pytest" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "build" },
     { name = "mdformat" },
     { name = "mdformat-frontmatter" },
     { name = "mdformat-gfm" },
+    { name = "pytest" },
     { name = "ruff" },
     { name = "twine" },
 ]
@@ -590,10 +586,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2,<3" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.3" },
     { name = "typing-extensions", specifier = ">=4.7" },
 ]
-provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -601,6 +595,7 @@ dev = [
     { name = "mdformat", specifier = ">=0.7" },
     { name = "mdformat-frontmatter", specifier = ">=2" },
     { name = "mdformat-gfm", specifier = ">=0.3" },
+    { name = "pytest", specifier = ">=9.0.3" },
     { name = "ruff", specifier = ">=0.6" },
     { name = "twine", specifier = ">=6,<7" },
 ]

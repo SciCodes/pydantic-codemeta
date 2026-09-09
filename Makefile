@@ -31,10 +31,10 @@ help:
 	@echo "  make release      - tag and push release v$(VERSION)"
 
 sync:
-	$(UV) sync --extra test
+	$(UV) sync
 
 test:
-	$(UV) run --extra test python -m pytest -q -s
+	$(UV) run python -m pytest -q -s
 
 clean:
 	rm -rf $(DIST_DIR) build
