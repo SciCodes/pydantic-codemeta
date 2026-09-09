@@ -47,6 +47,17 @@ def _validate_raw_json_value(value: object) -> object:
     return value
 
 
+def _declared_input_keys(model: type[BaseModel]) -> set[str]:
+    """Return field names and string aliases accepted as declared input."""
+
+    return {
+        key
+        for name, field in model.model_fields.items()
+        for key in (name, field.alias)
+        if isinstance(key, str)
+    }
+
+
 RawJsonValue: TypeAlias = Annotated[
     JsonValue, BeforeValidator(_validate_raw_json_value)
 ]
@@ -72,7 +83,7 @@ class SchemaOrgBase(BaseModel):
         use_enum_values=True,
     )
 
-    __pydantic_extra__: dict[str, RawJsonValue] = Field(init=False)
+    __pydantic_extra__: dict[str, object] = Field(init=False)
 
     id: str | None = Field(None, alias="@id")
     type: str = Field(..., alias="@type")
@@ -80,11 +91,12 @@ class SchemaOrgBase(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def reject_alias_name_collisions(cls, data: object) -> object:
-        """Reject ambiguous input containing both a field name and its alias."""
+        """Reject ambiguous aliases and Python-only extra values."""
 
         if not isinstance(data, Mapping):
             return data
 
+        field_keys = _declared_input_keys(cls)
         collisions = [
             (name, field.alias)
             for name, field in cls.model_fields.items()
@@ -98,6 +110,10 @@ class SchemaOrgBase(BaseModel):
                 f"{name!r} and {alias!r}" for name, alias in collisions
             )
             raise ValueError(f"Conflicting field name and JSON-LD alias: {rendered}")
+
+        for key, value in data.items():
+            if key not in field_keys:
+                _check_raw_json_value(value, key)
         return data
 
     def to_jsonld(self) -> dict[str, object]:
