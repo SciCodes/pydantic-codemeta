@@ -9,18 +9,7 @@ rules and release process.
 
 ## [Unreleased]
 
-### Added
-
-- `make format` target to format Python and Markdown with `ruff` and `mdformat`.
-- `make json-check` and `make json-format` targets to validate and canonicalize
-  JSON files with `python -m json.tool`.
-- `make cff-check` (with `make cff-validate` alias) target to validate
-  `CITATION.cff` with the `ghcr.io/scicodes/cffconvert:v2026.08` container image.
-- Dev dependencies for formatting: `ruff`, `mdformat`, `mdformat-gfm`,
-  `mdformat-frontmatter`.
-- Release policy governing Semantic Versioning 2.0.0 and the release process.
-
-## [0.1.0] - 2025-01-01
+## [0.1.0] - 2026-09-09
 
 ### Added
 
@@ -32,3 +21,11 @@ rules and release process.
   context normalization and legacy migration.
 - `CITATION.cff` and `codemeta.json` metadata.
 - Docker-based test and packaging workflows.
+- `make format` target to format Python and Markdown with `ruff` and `mdformat`.
+- `make json-check` and `make json-format` targets to validate and canonicalize
+  JSON files with `python -m json.tool`.
+- `make cff-check` (with `make cff-validate` alias) target to validate
+  `CITATION.cff` with the `ghcr.io/scicodes/cffconvert:v2026.08` container image.
+- Dev dependencies for formatting: `ruff`, `mdformat`, `mdformat-gfm`,
+  `mdformat-frontmatter`.
+- Release policy governing Semantic Versioning 2.0.0 and the release process.
